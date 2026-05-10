@@ -1,5 +1,6 @@
-# Local override — remap ports so EA can run alongside bcgov dev (8080) and the mock-api (8082).
-# Tracked locally only; not committed to upstream.
+# Combined-stack override:
+# - Remap ports so EA runs alongside bcgov dev (8080) and the mock-api (8082).
+# - Add Metabase as the §5 analytics layer, on the same docker network as EA's MySQL.
 
 services:
   nginx:
@@ -13,3 +14,17 @@ services:
   swagger-ui:
     ports:
       - '8087:8080'
+
+  metabase:
+    image: metabase/metabase:v0.50.30
+    container_name: cis-metabase
+    ports:
+      - '8088:3000'
+    environment:
+      - MB_DB_TYPE=h2                       # demo only — swap to Postgres for prod
+      - MB_DB_FILE=/metabase-data/metabase.db
+      - JAVA_TIMEZONE=America/Los_Angeles
+    volumes:
+      - ./docker/metabase:/metabase-data
+    depends_on:
+      - mysql

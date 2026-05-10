@@ -8,6 +8,7 @@ This repository now combines two upstream projects into a single cohesive app:
 | --- | --- | --- |
 | `web/` + `api/` | [bcgov/court-interpreter-scheduling](https://github.com/bcgov/court-interpreter-scheduling) | Original Vue 2 + FastAPI domain app — interpreter directory, ADM forms, audit reports. Re-skinned for the JCC bid. |
 | `easyappointments/` | [alextselegidis/easyappointments](https://github.com/alextselegidis/easyappointments) | Vendored fork providing the booking calendar, provider/customer admin, and notification scaffolding the bcgov base was missing relative to RFP Exhibit 1. See [`easyappointments/NOTICE.md`](./easyappointments/NOTICE.md) for license + provenance. |
+| `easyappointments/docker-compose.override.yml` | _(local)_ | Adds **Metabase** to the same compose stack — closes RFP §5 (reporting & analytics). Connects to EA's MySQL on the internal docker network; persists app metadata in `easyappointments/docker/metabase/` (gitignored). |
 | `mock-api/` | _(local)_ | Express stub for screenshotting the Vue frontend without standing up the FastAPI backend. Dev-only. |
 
 ## Stack
@@ -17,6 +18,7 @@ http://localhost:8080  →  bcgov Vue dev server  (web/)
 http://localhost:8082  →  mock-api Express stub (mock-api/)
 http://localhost:8085  →  Easy!Appointments     (easyappointments/)
 http://localhost:8086  →  phpMyAdmin            (easyappointments/)
+http://localhost:8088  →  Metabase              (easyappointments/, §5 analytics)
 ```
 
 ## Easy!Appointments subsystem
