@@ -1,4 +1,29 @@
-import 'dotenv/config';
+import { config as loadDotenv } from 'dotenv';
+import { dirname, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+// Load env files in priority order:
+//   1. integration/.env             (this package's local config)
+//   2. <repo-root>/.env.local       (cross-package secrets — Supabase keys etc.)
+// `dotenv.config` doesn't override values that already exist in process.env,
+// so the order means later files only fill in gaps. Both files are gitignored.
+const here = dirname(fileURLToPath(import.meta.url));
+loadDotenv({ path: resolve(here, '..', '.env') });
+const repoEnvLocal = resolve(here, '..', '..', '.env.local');
+if (existsSync(repoEnvLocal)) loadDotenv({ path: repoEnvLocal });
+
+// Alias common Next.js / Vite frontend conventions to the bare names our
+// backend reads. Lets a single .env.local serve both the SPA and the
+// integration services without copy-paste.
+const ALIASES: Record<string, string[]> = {
+  SUPABASE_URL:      ['NEXT_PUBLIC_SUPABASE_URL', 'VITE_SUPABASE_URL', 'VUE_APP_SUPABASE_URL'],
+  SUPABASE_ANON_KEY: ['NEXT_PUBLIC_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY', 'VUE_APP_SUPABASE_ANON_KEY'],
+};
+for (const [canonical, aliases] of Object.entries(ALIASES)) {
+  if (process.env[canonical]) continue;
+  for (const a of aliases) if (process.env[a]) { process.env[canonical] = process.env[a]; break; }
+}
 
 function req(name: string): string {
   const v = process.env[name];
@@ -14,7 +39,15 @@ export const env = {
     url: req('SUPABASE_URL'),
     anonKey: opt('SUPABASE_ANON_KEY'),
     serviceRoleKey: req('SUPABASE_SERVICE_ROLE_KEY'),
-    jwtSecret: req('SUPABASE_JWT_SECRET'),
+    // JWKS URL for asymmetric-signing projects (the default for new
+    // Supabase projects). Falls back to deriving from SUPABASE_URL.
+    jwksUrl: opt(
+      'SUPABASE_JWKS_URL',
+      `${process.env.SUPABASE_URL ?? ''}/auth/v1/.well-known/jwks.json`,
+    ),
+    // Optional — only set on legacy projects that still sign HS256, or
+    // for cohesion-test self-signed tokens.
+    jwtSecret: opt('SUPABASE_JWT_SECRET'),
   },
   ea: {
     baseUrl: req('EA_BASE_URL'),
