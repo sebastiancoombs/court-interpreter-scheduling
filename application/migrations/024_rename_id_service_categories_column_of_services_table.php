@@ -19,9 +19,7 @@ class Migration_Rename_id_service_categories_column_of_services_table extends EA
     public function up(): void
     {
         if ($this->db->field_exists('id_service_categories', 'services')) {
-            $this->db->query(
-                'ALTER TABLE `' . $this->db->dbprefix('services') . '` DROP FOREIGN KEY `services_service_categories`',
-            );
+            $this->drop_foreign_key('services', 'services_service_categories');
 
             $fields = [
                 'id_service_categories' => [
@@ -33,18 +31,7 @@ class Migration_Rename_id_service_categories_column_of_services_table extends EA
 
             $this->dbforge->modify_column('services', $fields);
 
-            $this->db->query(
-                '
-                ALTER TABLE `' .
-                    $this->db->dbprefix('services') .
-                    '`
-                    ADD CONSTRAINT `services_categories` FOREIGN KEY (`id_categories`) REFERENCES `' .
-                    $this->db->dbprefix('categories') .
-                    '` (`id`)
-                    ON DELETE SET NULL
-                    ON UPDATE CASCADE
-            ',
-            );
+            $this->add_foreign_key('services', 'services_categories', 'id_categories', 'categories', 'id', 'SET NULL', 'CASCADE');
         }
     }
 
@@ -54,9 +41,7 @@ class Migration_Rename_id_service_categories_column_of_services_table extends EA
     public function down(): void
     {
         if ($this->db->field_exists('id_categories', 'services')) {
-            $this->db->query(
-                'ALTER TABLE `' . $this->db->dbprefix('services') . '` DROP FOREIGN KEY `services_categories`',
-            );
+            $this->drop_foreign_key('services', 'services_categories');
 
             $fields = [
                 'id_categories' => [
@@ -68,18 +53,7 @@ class Migration_Rename_id_service_categories_column_of_services_table extends EA
 
             $this->dbforge->modify_column('services', $fields);
 
-            $this->db->query(
-                '
-                ALTER TABLE `' .
-                    $this->db->dbprefix('services') .
-                    '`
-                    ADD CONSTRAINT `services_service_categories` FOREIGN KEY (`id_service_categories`) REFERENCES `' .
-                    $this->db->dbprefix('categories') .
-                    '` (`id`)
-                    ON DELETE SET NULL
-                    ON UPDATE CASCADE
-            ',
-            );
+            $this->add_foreign_key('services', 'services_service_categories', 'id_service_categories', 'categories', 'id', 'SET NULL', 'CASCADE');
         }
     }
 }

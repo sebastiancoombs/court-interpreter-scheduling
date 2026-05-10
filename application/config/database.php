@@ -50,17 +50,27 @@ $active_group = 'default';
 $query_builder = TRUE;
 
 $db['default']['hostname'] = Config::DB_HOST;
+$db['default']['port']     = Config::DB_PORT;
 $db['default']['username'] = Config::DB_USERNAME;
 $db['default']['password'] = Config::DB_PASSWORD;
 $db['default']['database'] = Config::DB_NAME;
-$db['default']['dbdriver'] = 'mysqli';
+$db['default']['dbdriver'] = Config::DB_DRIVER;
 $db['default']['dbprefix'] = 'ea_';
 $db['default']['pconnect'] = FALSE;
 $db['default']['db_debug'] = TRUE;
 $db['default']['cache_on'] = FALSE;
 $db['default']['cachedir'] = '';
-$db['default']['char_set'] = 'utf8mb4';
-$db['default']['dbcollat'] = 'utf8mb4_unicode_ci';
+
+// Charset/collation — utf8mb4 is MySQL-only; Postgres connections take a
+// plain `utf8` (== UTF-8 server default) and ignore dbcollat.
+if (Config::DB_DRIVER === 'postgre') {
+    $db['default']['char_set'] = 'utf8';
+    $db['default']['dbcollat'] = '';
+} else {
+    $db['default']['char_set'] = 'utf8mb4';
+    $db['default']['dbcollat'] = 'utf8mb4_unicode_ci';
+}
+
 $db['default']['swap_pre'] = '';
 $db['default']['autoinit'] = TRUE;
 $db['default']['stricton'] = FALSE;
