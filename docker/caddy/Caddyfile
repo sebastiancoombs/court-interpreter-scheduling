@@ -10,12 +10,15 @@
 # the canonical hostname swapped in via `{$CIS_PUBLIC_HOST}`.
 
 {
-	# Use Caddy's internal CA in dev so https://cis.local works without a
-	# real cert. Railway/prod swaps this out via env override.
+	# Railway terminates TLS at its edge; Caddy serves plain HTTP on the
+	# port Railway assigns. In local dev this hits :8000 + cis.local.
 	auto_https disable_redirects
 }
 
-{$CIS_PUBLIC_HOST:cis.local}, http://localhost:8000 {
+# `:{$PORT:8000}` binds the Railway-assigned port at runtime; locally
+# falls back to 8000. We also keep the explicit `:8000` site address so
+# `localhost:8000` keeps working in dev without setting PORT.
+:{$PORT:8000} {
 	encode zstd gzip
 
 	# ---------------------------------------------------------------
