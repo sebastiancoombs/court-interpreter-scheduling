@@ -6,8 +6,9 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="https://www2.gov.bc.ca/gov/content/home/disclaimer"
+            href="https://www.sdcourt.ca.gov"
             target="_blank"
+            rel="noopener"
             >Disclaimer</a
           >
         </li>
@@ -17,25 +18,28 @@
         <li class="nav-item">
           <a
             class="nav-link"
-            href="https://www2.gov.bc.ca/gov/content/home/privacy"
+            href="https://www.sdcourt.ca.gov"
             target="_blank"
-            >Privacy</a
+            rel="noopener"
+            >Privacy Policy</a
           >
         </li>
         <li class="nav-item">
           <a
             class="nav-link"
-            href="https://www2.gov.bc.ca/gov/content/home/accessibility"
+            href="https://www.courts.ca.gov/policy_accessibility.htm"
             target="_blank"
+            rel="noopener"
             >Accessibility</a
           >
         </li>
         <li class="nav-item">
           <a
             class="nav-link"
-            href="https://www2.gov.bc.ca/gov/content/home/copyright"
+            href="https://www.courts.ca.gov"
             target="_blank"
-            >Copyright</a
+            rel="noopener"
+            >Judicial Branch of California</a
           >
         </li>
         <li class="nav-item">
@@ -46,17 +50,20 @@
 
     <b-modal size="xl" v-model="contactUs" header-class="bg-white">
       <template v-slot:modal-title>
-        <h1 class="mb-0 text-primary">General and Technical Enquiries</h1>
+        <h1 class="mb-0 text-primary">General and Technical Inquiries</h1>
       </template>
       <div class="m-3">
-        <p>Can't find what you are looking for? Have a technical issue?</p>
+        <p>Can't find what you are looking for? Have a technical issue with the Court Interpreter Scheduling application?</p>
         <p>
-          Contact us 8:00 am to 4:30 pm Pacific Time - Monday to Friday except
-          Statutory Holidays
+          Court Interpreter Services is available 7:30 a.m. to 4:30 p.m. Pacific Time, Monday through Friday, excluding court holidays.
         </p>
         <p>
-          CSO Support -
-          <a href="mailto:Courts.CSO@gov.bc.ca">Courts.CSO@gov.bc.ca</a>
+          <strong>Court Interpreter Services</strong><br/>
+          Phone: <a href="tel:+16194507100">(619) 450-7100</a><br/>
+          Email: <a href="mailto:interpreters@sdcourt.ca.gov">interpreters@sdcourt.ca.gov</a>
+        </p>
+        <p class="text-muted small mb-0">
+          Superior Court of California, County of San Diego — Court Interpreter Services
         </p>
       </div>
       <template v-slot:modal-footer>

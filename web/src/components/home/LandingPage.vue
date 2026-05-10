@@ -14,11 +14,12 @@
                 <b-col class="col-md-7" style="padding: 3rem 1rem 3rem 2rem;">
                     <h1 style="font-size:36pt;">Need Help?</h1>
                     <div style="font-size:12pt;">
-                        <p>Contact your security administrator or the 7-7000 Service Desk at:</p>
-                        <p>Phone: 250-387-7000</p>
-                        <p>Email: 77000@gov.bc.ca</p>                    
+                        <p>Contact Court Interpreter Services for the Superior Court of California, County of San Diego:</p>
+                        <p>Phone: (619) 450-7100</p>
+                        <p>Email: interpreters@sdcourt.ca.gov</p>
+                        <p style="font-size:10pt; opacity:0.85;">Hours: 7:30 a.m. – 4:30 p.m. Pacific, Monday through Friday (excluding court holidays).</p>
                     </div>
-                </b-col>                            
+                </b-col>
             </b-row> 
 
             <!-- <div class="landing-credit-div mb-4">
