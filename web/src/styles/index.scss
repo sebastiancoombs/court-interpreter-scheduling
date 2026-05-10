@@ -10,6 +10,7 @@ $bcgov-font-path: "../../node_modules/@bcgov/bootstrap-theme/dist/fonts/";
 @import "~bootstrap-vue/src/index.scss";
 
 @import "_custom_vuetify.scss";
+@import "_modern.scss";
 
 .breadcrumb {
   margin-bottom: 0;

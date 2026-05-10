@@ -1,3 +1,117 @@
+// === Modernized Bootstrap design tokens (must precede _custom_bootstrap.scss) ===
+$enable-shadows: true;
+$enable-rounded: true;
+
+// Greyscale — cooler, slate-leaning palette
+$gray-100: #f8fafc;
+$gray-200: #eef2f7;
+$gray-300: #e2e8f0;
+$gray-400: #cbd5e1;
+$gray-500: #94a3b8;
+$gray-600: #64748b;
+$gray-700: #475569;
+$gray-800: #334155;
+$gray-900: #0f172a;
+
+// Brand: Superior Court of California (Judicial Branch palette — deep navy + court gold)
+$ca-navy-deep:    #001a3d;
+$ca-navy:         #002F65;
+$ca-gold:         #C19A36;
+$ca-gold-deep:    #9d7d23;
+
+$blue:    #002F65;
+
+// Theme palette
+$primary:   #002F65;
+$secondary: #5b6b80;
+$success:   #15803d;
+$info:      #0e7490;
+$warning:   #C19A36;
+$danger:    #b91c1c;
+$light:     #f8fafc;
+$dark:      #0b1f3a;
+
+// Body
+$body-bg:    #f6f8fb;
+$body-color: #1f2937;
+
+// Typography
+$font-family-sans-serif: 'Inter', 'BC Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$font-size-base:    0.9375rem; // 15px
+$line-height-base:  1.55;
+$headings-font-weight: 600;
+$headings-color:    #0f172a;
+$headings-line-height: 1.25;
+
+// Borders / radii
+$border-color:        #e5e7eb;
+$border-radius:       0.5rem;
+$border-radius-lg:    0.75rem;
+$border-radius-sm:    0.375rem;
+
+// Shadows
+$box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+$box-shadow:    0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+$box-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+
+// Buttons
+$btn-padding-y:        0.5rem;
+$btn-padding-x:        1rem;
+$btn-font-weight:      500;
+$btn-border-radius:    0.5rem;
+$btn-border-radius-lg: 0.625rem;
+$btn-border-radius-sm: 0.375rem;
+$btn-box-shadow:       none;
+$btn-focus-width:      0.18rem;
+
+// Inputs
+$input-bg:                  #fff;
+$input-color:               #0f172a;
+$input-border-color:        #d1d5db;
+$input-border-radius:       0.5rem;
+$input-border-radius-lg:    0.625rem;
+$input-border-radius-sm:    0.375rem;
+$input-padding-y:           0.5rem;
+$input-padding-x:           0.75rem;
+$input-placeholder-color:   #94a3b8;
+$input-focus-border-color:  #4d77c2;
+$input-box-shadow:          none;
+
+// Cards
+$card-bg:           #fff;
+$card-border-width: 1px;
+$card-border-color: rgba(15, 23, 42, 0.06);
+$card-border-radius: 0.75rem;
+$card-spacer-y:     1.25rem;
+$card-spacer-x:     1.5rem;
+
+// Badges → pills by default
+$badge-padding-y:     0.35em;
+$badge-padding-x:     0.75em;
+$badge-border-radius: 999px;
+$badge-font-weight:   600;
+
+// Tables
+$table-cell-padding: 0.85rem 1rem;
+$table-color:        #1f2937;
+$table-border-color: #eef2f7;
+$table-hover-bg:     rgba(0, 47, 101, 0.04);
+$table-head-bg:      #002F65;
+$table-head-color:   #fff;
+
+// Dropdowns
+$dropdown-border-radius: 0.625rem;
+$dropdown-border-color:  rgba(15,23,42,0.08);
+$dropdown-box-shadow:    0 12px 32px rgba(15,23,42,0.12), 0 4px 8px rgba(15,23,42,0.06);
+$dropdown-link-hover-bg: #eef2f7;
+
+// Modals
+$modal-content-border-radius: 1rem;
+$modal-content-border-color:  rgba(15,23,42,0.08);
+
+// Navbar
+$navbar-padding-y: 0.75rem;
+
 // Protection Order Colours
 // -----------------------------------------
 

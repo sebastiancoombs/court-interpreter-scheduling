@@ -1,6 +1,6 @@
 <template>
 	<header v-if="dataReady" name="menu-bar" class="app-header" :key="update">
-		<b-navbar toggleable="lg" class="navbar navbar-expand-lg navbar-dark m-0 p-0" style="background-color: #38598a;">    
+		<b-navbar toggleable="lg" class="navbar navbar-expand-lg m-0 p-0">
            
 			<b-navbar-nav v-if="userRole.includes('super-admin')||userRole.includes('cis-admin')||userRole.includes('cis-user')" class="my-0 mx-5">
                 <b-nav-item 
@@ -20,7 +20,7 @@
 						Fillable ADM322
 					</b-dropdown-item>
 				</b-dropdown>
-				<b-navbar-brand v-if="determineEnv()" style="font-weight: 700; font-size: 20pt; margin: -0.35rem 1rem;" ><b-badge class="ml-4 px-5" variant="danger">{{determineEnv()}}</b-badge></b-navbar-brand>
+				<b-navbar-brand v-if="determineEnv()" class="env-badge-wrap" ><b-badge class="ml-3" variant="danger">{{determineEnv()}}</b-badge></b-navbar-brand>
 			</b-navbar-nav>
 			
 			<b-navbar-nav class="ml-auto mr-5">	
@@ -156,5 +156,11 @@
 
     ul >>> .dropdown-menu {
         width: 250px !important;
+    }
+
+    .env-badge-wrap {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 0.5rem;
     }
 </style>

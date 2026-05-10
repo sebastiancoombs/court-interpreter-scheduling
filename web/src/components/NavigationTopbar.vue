@@ -5,25 +5,23 @@
 
             <div class="container-fluid">
 
-                <a class="navbar-brand"
-                    href="https://www2.gov.bc.ca"
-                    style="max-width: 200px">
-                    <img class="img-fluid d-none d-md-block"
-                        src="../images/bcid-logo-rev-en.svg"
-                        width="177"
-                        height="44"
-                        alt="B.C. Government Logo"/>
-
-                    <img class="img-fluid d-md-none"
-                        src="../images/bcid-symbol-rev.svg"
-                        width="63"
-                        height="44"
-                        alt="B.C. Government Logo"/>
-
+                <a class="navbar-brand brand-wordmark"
+                    href="https://www.sdcourt.ca.gov"
+                    aria-label="Superior Court of California, County of San Diego">
+                    <span class="brand-mark" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" width="32" height="32" focusable="false">
+                            <path d="M20 4 L34 11 V21 C34 28 28 34 20 36 C12 34 6 28 6 21 V11 Z" fill="#C19A36" stroke="#fff" stroke-width="1.5"/>
+                            <text x="20" y="25" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700" fill="#001a3d">CA</text>
+                        </svg>
+                    </span>
+                    <span class="brand-meta d-none d-md-inline-flex">
+                        <span class="brand-line-1">Superior Court of California</span>
+                        <span class="brand-line-2">County of San Diego</span>
+                    </span>
                 </a>
 
-                <div class="navbar-brand navbar-text">                    
-                    Court Interpreter Scheduling                  
+                <div class="navbar-brand navbar-text app-name">
+                    Court Interpreter Scheduling
                 </div>
 
                 <div class="navbar-extra">
@@ -33,15 +31,19 @@
                                 <b-col>
                                     <b-dropdown id="profileDropdown"
                                                 text="Profile"
-                                                variant="primary btn-transparent"
+                                                variant="link"
                                                 menu-class="w-10"
+                                                right
+                                                no-caret
                                                 >
                                         <template #button-content >
-                                            <span class="fa fa-user"></span> {{ userName }}
+                                            <span class="topbar-avatar">{{ initials }}</span>
+                                            <span class="topbar-username">{{ userName }}</span>
+                                            <b-icon icon="chevron-down" class="ml-2 topbar-chev"/>
                                         </template>
                                         <b-dropdown-item @click="logout()">
                                             <b-icon-box-arrow-left class="mr-2"/>Logout
-                                        </b-dropdown-item>                                
+                                        </b-dropdown-item>
                                     </b-dropdown>
                                 </b-col>
                                 <b-col>
@@ -165,20 +167,21 @@ export default class NavigationTopbar extends Vue {
         return _.sortBy(this.courtLocations,'name')
     }
 
+    get initials(): string {
+        if (!this.userName) return '';
+        const parts = this.userName.trim().split(/\s+/);
+        const first = parts[0]?.[0] || '';
+        const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+        return (first + last).toUpperCase();
+    }
+
 }
 </script>
-
-<style>
-.btn-transparent {
-  background-color: transparent !important;
-  border-color: #ccc !important;
-}
-</style>
 
 <style scoped lang="scss">
 @import "../styles/common";
 .navbar {
-  padding-right: 170px;
+  padding-right: 1.5rem;
 }
 .navbar-brand:not(.logo) {
   flex: 1 1 auto;
@@ -199,9 +202,72 @@ export default class NavigationTopbar extends Vue {
 }
 
 .alert{
-    font-weight: 800;
+    font-weight: 600;
     height: 2.4rem;
-    margin:0;
+    margin: 0;
     padding: 0.4rem 1rem;
+    border-radius: 999px;
+}
+
+::v-deep .topbar-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    margin-right: 0.55rem;
+}
+::v-deep .topbar-username {
+    color: #fff;
+    font-weight: 500;
+}
+::v-deep .topbar-chev {
+    opacity: 0.65;
+    font-size: 0.85rem;
+}
+
+.brand-wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    color: #fff !important;
+    text-decoration: none !important;
+    padding: 0.1rem 0;
+}
+.brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.brand-meta {
+    flex-direction: column;
+    line-height: 1.1;
+}
+.brand-line-1 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.85);
+}
+.brand-line-2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    color: #fff;
+}
+.app-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.005em;
+    color: #fff;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    padding-left: 1rem;
+    margin-left: 0.75rem;
 }
 </style>

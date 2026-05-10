@@ -1,0 +1,250 @@
+// Modern polish layer — applied after Bootstrap so cascade lands on top.
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body { background: #f5f7fb; }
+
+// Cards — softer chrome with subtle hover lift
+.card {
+  transition: box-shadow .2s ease, transform .2s ease, border-color .2s ease;
+  &.bg-light { background-color: #fff !important; }
+  &.bg-white { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.05); }
+}
+
+// Buttons — modern transitions, accessible focus, no harsh inset shadow
+.btn {
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease, color .15s ease;
+  letter-spacing: .005em;
+  &:focus, &.focus { outline: none; box-shadow: 0 0 0 3px rgba(0, 47, 101, .25) !important; }
+  &:hover:not(:disabled):not(.disabled) { transform: translateY(-1px); }
+  &:active:not(:disabled):not(.disabled) { transform: translateY(0); }
+}
+.btn-primary {
+  background-color: #002F65;
+  border-color: #002F65;
+  &:hover:not(:disabled) { background-color: #001a3d; border-color: #001a3d; }
+}
+.btn-success { background-color: #15803d; border-color: #15803d; }
+.btn-secondary { background-color: #5b6b80; border-color: #5b6b80; }
+.btn-warning {
+  background-color: #C19A36 !important;
+  border-color: #C19A36 !important;
+  color: #1f2937 !important;
+  &:hover:not(:disabled) { background-color: #a8852f !important; border-color: #a8852f !important; }
+}
+
+// Pill badges (already round via border-radius var, this tightens text)
+.badge {
+  letter-spacing: .015em;
+  font-feature-settings: 'tnum';
+  &.badge-warning { background-color: #fef3c7 !important; color: #92400e !important; }
+  &.badge-success { background-color: #d1fae5 !important; color: #065f46 !important; }
+  &.badge-danger  { background-color: #fee2e2 !important; color: #991b1b !important; }
+  &.badge-info    { background-color: #cffafe !important; color: #155e75 !important; }
+  &.badge-secondary { background-color: #e2e8f0 !important; color: #334155 !important; }
+}
+
+// Form inputs — clean focus ring
+.form-control, .custom-select, .b-form-datepicker {
+  transition: border-color .15s ease, box-shadow .15s ease;
+  &:focus {
+    border-color: #6b8eff;
+    box-shadow: 0 0 0 3px rgba(107, 142, 255, .22) !important;
+  }
+}
+.form-control { box-shadow: none !important; }
+
+// Tables — uppercase headers, hover rows, no inner borders
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  thead th {
+    text-transform: uppercase;
+    font-size: .72rem;
+    letter-spacing: .055em;
+    font-weight: 600;
+    border-bottom: 0;
+    background-color: #002F65;
+    color: #fff;
+  }
+  thead tr th:first-child { border-top-left-radius: .625rem; }
+  thead tr th:last-child  { border-top-right-radius: .625rem; }
+  tbody tr { transition: background-color .12s ease; }
+  tbody tr:hover td { background-color: rgba(0, 47, 101, .045); }
+  td { border-top: 1px solid #eef2f7; }
+}
+// Tighten the row stripe inside cards
+.b-table-sticky-header { box-shadow: none; }
+
+// Headings
+h1, h2, h3, .h1, .h2, .h3 { letter-spacing: -0.012em; }
+
+// Dropdown menu polish
+.dropdown-menu {
+  border: 1px solid rgba(15, 23, 42, .06);
+  padding: .375rem;
+  .dropdown-item {
+    border-radius: .375rem;
+    padding: .5rem .75rem;
+    transition: background-color .12s ease, color .12s ease;
+    &:hover, &:focus { background-color: #eef2f7; }
+    &.active, &:active { background-color: #002F65; color: #fff; }
+  }
+}
+
+// Modal chrome
+.modal-content { box-shadow: 0 24px 64px rgba(15,23,42,.18), 0 8px 16px rgba(15,23,42,.06); }
+
+// Focus visible globally
+:focus-visible { outline: 2px solid rgba(0,47,101,.6); outline-offset: 2px; }
+
+// === Skeleton shimmer (used by LoadingSpinner) ===
+@keyframes cis-shimmer {
+  0%   { background-position: -480px 0; }
+  100% { background-position:  480px 0; }
+}
+.cis-skeleton-card {
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.06);
+  border-radius: .75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.05);
+}
+.cis-skel {
+  display: block;
+  height: 0.85rem;
+  margin: 0.55rem 0;
+  border-radius: 0.4rem;
+  background: linear-gradient(90deg, #eef2f7 0px, #f8fafc 200px, #eef2f7 400px);
+  background-size: 960px 100%;
+  animation: cis-shimmer 1.6s ease-in-out infinite;
+}
+.cis-skel--title  { height: 1.2rem; width: 28%; margin-bottom: 1.25rem; }
+.cis-skel--row    { height: 0.9rem; }
+.cis-skel--button { height: 2.25rem; width: 8rem; border-radius: .5rem; }
+.cis-skel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 1.25rem;
+  margin-top: 1.25rem;
+}
+
+// === Top chrome polish ===
+.app-header {
+  position: relative;
+  z-index: 5;
+}
+.app-header > nav.navbar {
+  background: linear-gradient(180deg, #001a3d 0%, #002F65 100%) !important;
+  padding: .75rem 1.5rem;
+  border-bottom: 4px solid #C19A36;
+  box-shadow: 0 4px 12px rgba(0, 51, 102, 0.18);
+}
+.app-header .navbar-brand.navbar-text {
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: .005em;
+  color: #fff;
+}
+.app-header #app-profile .btn,
+.app-header #app-profile .btn.btn-transparent,
+.app-header #app-profile .btn.btn-link {
+  border-radius: 999px !important;
+  padding: .35rem 1rem !important;
+  background-color: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.18) !important;
+  color: #fff !important;
+  font-weight: 500;
+  text-decoration: none !important;
+  &:hover, &:focus { background-color: rgba(255,255,255,.16) !important; text-decoration: none !important; }
+}
+.app-header #app-profile .btn.dropdown-toggle::after { display: none; }
+.app-header #app-profile .custom-select,
+.app-header #app-profile select {
+  border-radius: 999px !important;
+  background-color: rgba(255,255,255,.08) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #fff !important;
+  padding-right: 2rem;
+  &:focus { box-shadow: 0 0 0 3px rgba(193, 154, 54, .35) !important; }
+  option { color: #1f2937; }
+}
+
+// MenuBar polish
+header[name="menu-bar"] .navbar {
+  background: #fff !important;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 0 rgba(15,23,42,.02), 0 4px 12px rgba(15,23,42,.04);
+  padding: .25rem 1rem !important;
+}
+header[name="menu-bar"] .navbar .navbar-nav .nav-item {
+  margin: .35rem .25rem;
+}
+header[name="menu-bar"] .navbar .navbar-nav .nav-link {
+  color: #475569 !important;
+  font-weight: 500;
+  border-radius: .5rem;
+  padding: .55rem 1rem !important;
+  transition: background-color .12s ease, color .12s ease;
+  &:hover { background-color: #eef2f7; color: #0f172a !important; }
+}
+header[name="menu-bar"] .navbar .navbar-nav .booking-tab {
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+}
+header[name="menu-bar"] .navbar .navbar-nav .nav-item.bg-cyan,
+header[name="menu-bar"] .navbar .navbar-nav .nav-item.bg-cyan .nav-link {
+  background-color: rgba(0, 47, 101, .08) !important;
+  color: #002F65 !important;
+}
+header[name="menu-bar"] .navbar .navbar-nav .nav-item.bg-cyan {
+  position: relative;
+  border-radius: .5rem;
+}
+header[name="menu-bar"] .navbar .navbar-nav .nav-item.bg-cyan::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: -.45rem;
+  height: 3px;
+  border-radius: 2px;
+  background-color: #C19A36;
+}
+// Forms & Admin dropdown buttons
+header[name="menu-bar"] .navbar .b-dropdown > .btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #475569 !important;
+  font-weight: 500;
+  border-radius: .5rem;
+  padding: .55rem 1rem !important;
+  &:hover { background: #eef2f7 !important; color: #0f172a !important; }
+}
+// DEV badge — soften
+header[name="menu-bar"] .badge.badge-danger {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  font-size: .75rem !important;
+  padding: .35em .75em !important;
+  letter-spacing: .04em;
+  border: 1px solid #fecaca;
+}
+
+// Page background polish for the main content area
+.app-content {
+  background: #f5f7fb;
+}
+
+// Typography helpers
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 1rem;
+}

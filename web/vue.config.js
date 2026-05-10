@@ -4,7 +4,7 @@ module.exports = {
   devServer: {
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: process.env.MOCK_API_TARGET || "http://localhost:8082",
         pathRewrite: { '^/court-interpreter-scheduling': '' },
         secure: false,
         changeOrigin: true,
