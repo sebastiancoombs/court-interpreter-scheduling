@@ -19,6 +19,11 @@ http://localhost:8082  →  mock-api Express stub (mock-api/)
 http://localhost:8085  →  Easy!Appointments     (easyappointments/)
 http://localhost:8086  →  phpMyAdmin            (easyappointments/)
 http://localhost:8088  →  Metabase              (easyappointments/, §5 analytics)
+http://localhost:8090  →  integration/auth-bridge   (Supabase JWT → downstream sessions)
+http://localhost:8091  →  integration/metabase-sso  (proxy with auto-provisioning)
+http://localhost:8092  →  integration/ea-sync       (replication worker; health endpoint)
+http://127.0.0.1:54321 →  Supabase API              (`cd supabase && supabase start`)
+http://127.0.0.1:54323 →  Supabase Studio
 ```
 
 ## Easy!Appointments subsystem

@@ -1,0 +1,38 @@
+{
+  "name": "court-interpreter-integration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:all": "concurrently -n auth,sync,sso -c blue,green,magenta \"npm:dev:auth\" \"npm:dev:sync\" \"npm:dev:sso\"",
+    "dev:auth": "tsx watch auth-bridge/server.ts",
+    "dev:sync": "tsx watch ea-sync/worker.ts",
+    "dev:sso":  "tsx watch metabase-sso/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start:auth": "node dist/auth-bridge/server.js",
+    "start:sync": "node dist/ea-sync/worker.js",
+    "start:sso":  "node dist/metabase-sso/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "hono": "^4.6.0",
+    "@hono/node-server": "^1.13.0",
+    "express": "^4.21.0",
+    "http-proxy-middleware": "^3.0.0",
+    "mysql2": "^3.11.0",
+    "pg": "^8.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "jose": "^5.9.0",
+    "zod": "^3.23.8",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^22.7.0",
+    "@types/pg": "^8.11.10",
+    "concurrently": "^9.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
