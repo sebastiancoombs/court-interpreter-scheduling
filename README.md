@@ -1,10 +1,37 @@
 # Court Interpreter Scheduling
-Court Interpreter Scheduling
 
+Bid scaffold for **RFP LSS-2026-207-RB** — Judicial Council of California, Court Interpreters Program.
 
-## Structure
+This repository now combines two upstream projects into a single cohesive app:
 
-## Dev environment
+| Subtree | Upstream | Role |
+| --- | --- | --- |
+| `web/` + `api/` | [bcgov/court-interpreter-scheduling](https://github.com/bcgov/court-interpreter-scheduling) | Original Vue 2 + FastAPI domain app — interpreter directory, ADM forms, audit reports. Re-skinned for the JCC bid. |
+| `easyappointments/` | [alextselegidis/easyappointments](https://github.com/alextselegidis/easyappointments) | Vendored fork providing the booking calendar, provider/customer admin, and notification scaffolding the bcgov base was missing relative to RFP Exhibit 1. See [`easyappointments/NOTICE.md`](./easyappointments/NOTICE.md) for license + provenance. |
+| `mock-api/` | _(local)_ | Express stub for screenshotting the Vue frontend without standing up the FastAPI backend. Dev-only. |
+
+## Stack
+
+```
+http://localhost:8080  →  bcgov Vue dev server  (web/)
+http://localhost:8082  →  mock-api Express stub (mock-api/)
+http://localhost:8085  →  Easy!Appointments     (easyappointments/)
+http://localhost:8086  →  phpMyAdmin            (easyappointments/)
+```
+
+## Easy!Appointments subsystem
+
+```bash
+cd easyappointments
+cp config-sample.php config.php
+# edit BASE_URL = 'http://localhost:8085'
+docker compose up -d nginx php-fpm mysql
+docker compose exec php-fpm php index.php console install
+# admin login: administrator / administrator → http://localhost:8085
+```
+
+## Original bcgov dev environment
+
 Currently it requires: Npm 6.14.14, Node 12, Python 3.8/3.9/3.10. Running on Docker is recommended.
 
 #### Important commands for the web folder:

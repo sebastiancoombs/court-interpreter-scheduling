@@ -58,3 +58,16 @@ pdf/*.pdf
 
 
 #web/package-lock.json
+
+# Procurement / RFP source documents — never commit to a public fork
+RFP_*.pdf
+rfp_*.pdf
+
+# Easy!Appointments runtime state inside the easyappointments/ subtree
+# (its own .gitignore handles most of this; these are belt-and-suspenders)
+easyappointments/storage/cache/*
+easyappointments/storage/logs/*
+easyappointments/storage/sessions/*
+easyappointments/storage/uploads/*
+easyappointments/docker/mysql/
+
