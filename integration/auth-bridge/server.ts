@@ -3,11 +3,27 @@
 
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { env } from '../shared/env.ts';
 import { admin } from '../shared/supabase.ts';
 import { verifySupabaseJwt, signMetabaseJwt } from '../shared/jwt.ts';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const TOPBAR_CSS = readFileSync(join(__dirname, '..', 'topbar', 'topbar.css'), 'utf8');
+
 const app = new Hono();
+
+// Serve the unified topbar stylesheet so every subsystem (bcgov, EA,
+// metabase) loads its chrome from one place. CORS open since bcgov is on
+// :8080, EA on :8085, metabase on :8088.
+app.get('/topbar.css', (c) => {
+  c.header('Access-Control-Allow-Origin', '*');
+  c.header('Cache-Control', 'public, max-age=60');
+  c.header('Content-Type', 'text/css; charset=utf-8');
+  return c.body(TOPBAR_CSS);
+});
 
 // Helper — pull "Authorization: Bearer …" off the request
 async function requireUser(c: any) {

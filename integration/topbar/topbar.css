@@ -1,0 +1,222 @@
+/* ----------------------------------------------------------------------------
+ * Unified topbar — single source of truth for the chrome that wraps every
+ * subsystem (bcgov FastAPI/Vue, easyappointments, metabase).
+ *
+ * Loaded by each subsystem from the auth-bridge:
+ *   <link rel="stylesheet" href="http://localhost:8090/topbar.css">
+ *
+ * Markup contract — every page must render this skeleton inside <body>:
+ *
+ *   <header class="cis-topbar">
+ *     <div class="cis-topbar__brand-row">
+ *       <a class="cis-brand" href="${BCGOV_URL}/bookings"> ... </a>
+ *       <div class="cis-topbar__actions">
+ *         <select class="cis-court-select">…</select>
+ *         <button class="cis-user-pill">…</button>
+ *       </div>
+ *     </div>
+ *     <nav class="cis-subnav">
+ *       <a href="…" class="cis-tab" data-active>Manage Bookings</a>
+ *       <a href="…" class="cis-tab">Add Booking</a>
+ *       …
+ *     </nav>
+ *   </header>
+ *
+ * The .cis-tab[data-active] selector marks the currently-viewed page.
+ * Subsystems set it in their own templating (Vue v-bind, PHP echo, etc.).
+ * ---------------------------------------------------------------------------- */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --cis-navy-deep: #001a3d;
+  --cis-navy:      #002F65;
+  --cis-gold:      #C19A36;
+  --cis-gold-deep: #9d7d23;
+  --cis-surface:   #ffffff;
+  --cis-surface-muted: #eef2f7;
+  --cis-border:    #e5e7eb;
+  --cis-foreground: #0f172a;
+  --cis-muted:     #64748b;
+}
+
+.cis-topbar,
+.cis-topbar * {
+  box-sizing: border-box;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.cis-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: linear-gradient(180deg, var(--cis-navy-deep) 0%, var(--cis-navy) 100%);
+  border-bottom: 4px solid var(--cis-gold);
+  box-shadow: 0 4px 12px rgba(0, 26, 61, 0.18);
+  color: #fff;
+}
+
+/* Row 1 — brand + global actions ------------------------------------ */
+.cis-topbar__brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.65rem 1.5rem;
+}
+
+.cis-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #fff !important;
+  text-decoration: none !important;
+}
+.cis-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.cis-brand__meta {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.cis-brand__pre {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+.cis-brand__name {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.cis-topbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.cis-court-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.4rem 2.25rem 0.4rem 1rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='white' opacity='0.7' d='M3 6l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px;
+}
+.cis-court-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(193, 154, 54, 0.35); }
+.cis-court-select option { color: #1f2937; }
+
+.cis-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: #fff;
+  padding: 0.25rem 1rem 0.25rem 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.cis-user-pill:hover { background: rgba(255, 255, 255, 0.16); }
+.cis-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+}
+
+/* Row 2 — sub-nav --------------------------------------------------- */
+.cis-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cis-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  color: rgba(255, 255, 255, 0.78) !important;
+  text-decoration: none !important;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  border-radius: 0.5rem 0.5rem 0 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  margin: 0.25rem 0 0;
+}
+.cis-tab:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+.cis-tab[data-active] {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.1);
+}
+.cis-tab[data-active]::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: -2px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--cis-gold);
+}
+
+.cis-tab__badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15em 0.6em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.05em;
+}
+
+/* Hide host-system native chrome wherever the unified topbar is mounted */
+body.cis-topbar-mounted .ea-native-navbar,
+body.cis-topbar-mounted #navigation-topbar-native,
+body.cis-topbar-mounted header[name="menu-bar"]:not(.cis-topbar) {
+  display: none !important;
+}
+
+/* Force a small body offset so sticky topbar doesn't jump */
+body.cis-topbar-mounted { padding-top: 0; }
+
+/* Tighter mobile pass */
+@media (max-width: 720px) {
+  .cis-brand__pre { display: none; }
+  .cis-subnav { overflow-x: auto; flex-wrap: nowrap; }
+  .cis-court-select { max-width: 9rem; }
+}

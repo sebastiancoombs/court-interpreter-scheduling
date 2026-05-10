@@ -29,18 +29,21 @@
 
     <?php component('company_color_style', ['company_color' => vars('company_color')]); ?>
 
+    <!-- Unified topbar CSS — single source of truth, served by integration/auth-bridge. -->
+    <link rel="stylesheet" href="<?= getenv('CIS_TOPBAR_CSS') ?: 'http://localhost:8090/topbar.css' ?>">
+
     <?php slot('styles'); ?>
 </head>
 
-<body>
+<body class="cis-topbar-mounted">
+
+<?php $cis_active = 'add_booking'; include __DIR__ . '/../components/cis_topbar.php'; ?>
+
 <div id="main" class="container">
     <div class="row wrapper">
         <div id="book-appointment-wizard" class="col-12 col-lg-10 col-xl-8 col-xxl-7">
 
-            <?php component('booking_header', [
-                'company_name' => vars('company_name'),
-                'company_logo' => vars('company_logo'),
-            ]); ?>
+            <?php /* JCC fork — booking_header replaced by the unified topbar above. */ ?>
 
             <?php slot('content'); ?>
 

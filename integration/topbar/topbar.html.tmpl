@@ -1,0 +1,62 @@
+<!--
+  Reference markup for the unified topbar. Each subsystem renders this
+  same structure in its own template language. Class names + data-active
+  are part of the contract — see ../topbar.css for the styles + CSS hook
+  that hides each subsystem's native navbar.
+
+  Token replacements applied per render:
+    {{links.bookings}}        absolute URL into bcgov for /bookings
+    {{links.calendar}}        absolute URL into EA for /index.php/calendar
+    {{links.add_booking}}     EA public wizard URL
+    {{links.interpreters}}    bcgov /directory
+    {{links.languages}}       bcgov /language
+    {{links.rates}}           bcgov /rates
+    {{links.reports}}         metabase URL (or /metabase via sso sidecar)
+    {{links.audit}}           bcgov /audit-booking
+    {{links.admin}}           bcgov /user-role (admin home)
+    {{user.initials}}         "KD"
+    {{user.display_name}}     "Kai Demo"
+    {{court.id}} {{court.name}} for the location selector
+    {{active}}                key of the currently active tab
+-->
+<header class="cis-topbar">
+  <div class="cis-topbar__brand-row">
+    <a class="cis-brand" href="{{links.bookings}}" aria-label="Court Interpreter Scheduling — JCC home">
+      <span class="cis-brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="32" height="32" focusable="false">
+          <path d="M20 4 L34 11 V21 C34 28 28 34 20 36 C12 34 6 28 6 21 V11 Z"
+                fill="#C19A36" stroke="#fff" stroke-width="1.5"/>
+          <text x="20" y="25" text-anchor="middle" font-family="Inter, system-ui, sans-serif"
+                font-size="13" font-weight="700" fill="#001a3d">CA</text>
+        </svg>
+      </span>
+      <span class="cis-brand__meta">
+        <span class="cis-brand__pre">Judicial Council of California</span>
+        <span class="cis-brand__name">Court Interpreter Scheduling</span>
+      </span>
+    </a>
+
+    <div class="cis-topbar__actions">
+      <select class="cis-court-select" aria-label="Court location">
+        {{#each courts}}<option value="{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.name}}</option>{{/each}}
+      </select>
+      <button class="cis-user-pill" type="button" aria-haspopup="menu">
+        <span class="cis-avatar">{{user.initials}}</span>
+        <span class="cis-user-pill__name">{{user.display_name}}</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="cis-subnav" aria-label="Primary">
+    <a class="cis-tab" data-active-key="bookings"     {{#if (eq active "bookings")}}data-active{{/if}}     href="{{links.bookings}}">Manage Bookings</a>
+    <a class="cis-tab" data-active-key="calendar"     {{#if (eq active "calendar")}}data-active{{/if}}     href="{{links.calendar}}">Calendar</a>
+    <a class="cis-tab" data-active-key="add_booking"  {{#if (eq active "add_booking")}}data-active{{/if}}  href="{{links.add_booking}}">Add Booking</a>
+    <a class="cis-tab" data-active-key="interpreters" {{#if (eq active "interpreters")}}data-active{{/if}} href="{{links.interpreters}}">Interpreters</a>
+    <a class="cis-tab" data-active-key="languages"    {{#if (eq active "languages")}}data-active{{/if}}    href="{{links.languages}}">Languages</a>
+    <a class="cis-tab" data-active-key="rates"        {{#if (eq active "rates")}}data-active{{/if}}        href="{{links.rates}}">Rates</a>
+    <a class="cis-tab" data-active-key="reports"      {{#if (eq active "reports")}}data-active{{/if}}      href="{{links.reports}}">Reports</a>
+    <a class="cis-tab" data-active-key="audit"        {{#if (eq active "audit")}}data-active{{/if}}        href="{{links.audit}}">Audit</a>
+    <a class="cis-tab" data-active-key="admin"        {{#if (eq active "admin")}}data-active{{/if}}        href="{{links.admin}}">Admin</a>
+    <span class="cis-tab__badge">DEV</span>
+  </nav>
+</header>
