@@ -70,7 +70,11 @@ export default class UnifiedTopbar extends Vue {
     }
     get bcgovBase(): string { return this.envOr('bcgov', ''); }
     get eaBase():    string { return this.envOr('ea',    'http://localhost:8085'); }
-    get mbBase():    string { return this.envOr('metabase','http://localhost:8088'); }
+    // Reports go through the metabase-sso sidecar so Metabase wears the
+    // unified topbar (the sidecar injects it into HTML responses). Keep
+    // `metabase` as an override that reads bare Metabase if a deployment
+    // ever wants the address bar to land on Metabase directly.
+    get mbBase():    string { return this.envOr('metabase','http://localhost:8091/metabase'); }
 
     get links() {
         return {

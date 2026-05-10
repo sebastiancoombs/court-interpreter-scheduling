@@ -4,14 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:all": "concurrently -n auth,sync,sso -c blue,green,magenta \"npm:dev:auth\" \"npm:dev:sync\" \"npm:dev:sso\"",
+    "dev:all": "concurrently -n auth,sso -c blue,magenta \"npm:dev:auth\" \"npm:dev:sso\"",
     "dev:auth": "tsx watch auth-bridge/server.ts",
-    "dev:sync": "tsx watch ea-sync/worker.ts",
     "dev:sso":  "tsx watch metabase-sso/server.ts",
     "test": "tsx tests/cohesion.test.ts",
+    "scan:mysql": "tsx tests/ea-mysql-scan.ts",
     "build": "tsc -p tsconfig.json",
     "start:auth": "node dist/auth-bridge/server.js",
-    "start:sync": "node dist/ea-sync/worker.js",
     "start:sso":  "node dist/metabase-sso/server.js"
   },
   "dependencies": {
@@ -20,7 +19,6 @@
     "@hono/node-server": "^1.13.0",
     "express": "^4.21.0",
     "http-proxy-middleware": "^3.0.0",
-    "mysql2": "^3.11.0",
     "pg": "^8.13.0",
     "jsonwebtoken": "^9.0.2",
     "jose": "^5.9.0",

@@ -18,164 +18,31 @@ class Migration_Remove_prefix_from_fkey_constraints extends EA_Migration
      */
     public function up(): void
     {
-        // Drop table constraints.
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('appointments') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_2`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('appointments') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_3`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('appointments') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_4`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '` DROP FOREIGN KEY `fk_' .
-                $this->db->dbprefix('secretaries_providers') .
-                '_1`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '` DROP FOREIGN KEY `fk_' .
-                $this->db->dbprefix('secretaries_providers') .
-                '_2`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('services_providers') .
-                '_ibfk_1`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('services_providers') .
-                '_ibfk_2`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('services') .
-                '_ibfk_1`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('users') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('users') .
-                '_ibfk_1`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('user_settings') .
-                '` DROP FOREIGN KEY `' .
-                $this->db->dbprefix('user_settings') .
-                '_ibfk_1`',
-        );
+        $prefix = $this->db->dbprefix('');
+
+        // Drop the old prefixed constraints.
+        $this->drop_foreign_key('appointments',          $prefix . 'appointments_ibfk_2');
+        $this->drop_foreign_key('appointments',          $prefix . 'appointments_ibfk_3');
+        $this->drop_foreign_key('appointments',          $prefix . 'appointments_ibfk_4');
+        $this->drop_foreign_key('secretaries_providers', 'fk_' . $prefix . 'secretaries_providers_1');
+        $this->drop_foreign_key('secretaries_providers', 'fk_' . $prefix . 'secretaries_providers_2');
+        $this->drop_foreign_key('services_providers',    $prefix . 'services_providers_ibfk_1');
+        $this->drop_foreign_key('services_providers',    $prefix . 'services_providers_ibfk_2');
+        $this->drop_foreign_key('services',              $prefix . 'services_ibfk_1');
+        $this->drop_foreign_key('users',                 $prefix . 'users_ibfk_1');
+        $this->drop_foreign_key('user_settings',         $prefix . 'user_settings_ibfk_1');
 
         // Add table constraints again without the "ea" prefix.
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('appointments') .
-                '`
-            ADD CONSTRAINT `appointments_users_customer` FOREIGN KEY (`id_users_customer`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-            ADD CONSTRAINT `appointments_services` FOREIGN KEY (`id_services`) REFERENCES `' .
-                $this->db->dbprefix('services') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-            ADD CONSTRAINT `appointments_users_provider` FOREIGN KEY (`id_users_provider`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '`
-            ADD CONSTRAINT `secretaries_users_secretary` FOREIGN KEY (`id_users_secretary`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-            ADD CONSTRAINT `secretaries_users_provider` FOREIGN KEY (`id_users_provider`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services') .
-                '`
-            ADD CONSTRAINT `services_service_categories` FOREIGN KEY (`id_service_categories`) REFERENCES `' .
-                $this->db->dbprefix('service_categories') .
-                '` (`id`)
-            ON DELETE SET NULL
-            ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '`
-            ADD CONSTRAINT `services_providers_users_provider` FOREIGN KEY (`id_users`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE,
-            ADD CONSTRAINT `services_providers_services` FOREIGN KEY (`id_services`) REFERENCES `' .
-                $this->db->dbprefix('services') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('users') .
-                '`
-            ADD CONSTRAINT `users_roles` FOREIGN KEY (`id_roles`) REFERENCES `' .
-                $this->db->dbprefix('roles') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('user_settings') .
-                '`
-            ADD CONSTRAINT `user_settings_users` FOREIGN KEY (`id_users`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE',
-        );
+        $this->add_foreign_key('appointments',          'appointments_users_customer',      'id_users_customer', 'users',             'id');
+        $this->add_foreign_key('appointments',          'appointments_services',            'id_services',       'services',          'id');
+        $this->add_foreign_key('appointments',          'appointments_users_provider',      'id_users_provider', 'users',             'id');
+        $this->add_foreign_key('secretaries_providers', 'secretaries_users_secretary',      'id_users_secretary','users',             'id');
+        $this->add_foreign_key('secretaries_providers', 'secretaries_users_provider',       'id_users_provider', 'users',             'id');
+        $this->add_foreign_key('services',              'services_service_categories',      'id_service_categories', 'service_categories', 'id', 'SET NULL', 'CASCADE');
+        $this->add_foreign_key('services_providers',    'services_providers_users_provider','id_users',          'users',             'id');
+        $this->add_foreign_key('services_providers',    'services_providers_services',      'id_services',       'services',          'id');
+        $this->add_foreign_key('users',                 'users_roles',                      'id_roles',          'roles',             'id');
+        $this->add_foreign_key('user_settings',         'user_settings_users',              'id_users',          'users',             'id');
     }
 
     /**
@@ -183,129 +50,30 @@ class Migration_Remove_prefix_from_fkey_constraints extends EA_Migration
      */
     public function down(): void
     {
-        // Drop table constraints.
-        $this->db->query(
-            'ALTER TABLE `' . $this->db->dbprefix('appointments') . '` DROP FOREIGN KEY `appointments_services`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' . $this->db->dbprefix('appointments') . '` DROP FOREIGN KEY `appointments_users_customer`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' . $this->db->dbprefix('appointments') . '` DROP FOREIGN KEY `appointments_users_provider`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '` DROP FOREIGN KEY `secretaries_users_secretary`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '` DROP FOREIGN KEY `secretaries_users_provider`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '` DROP FOREIGN KEY `services_providers_users_provider`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '` DROP FOREIGN KEY `services_providers_services`',
-        );
-        $this->db->query(
-            'ALTER TABLE `' . $this->db->dbprefix('services') . '` DROP FOREIGN KEY `services_service_categories`',
-        );
-        $this->db->query('ALTER TABLE `' . $this->db->dbprefix('users') . '` DROP FOREIGN KEY `users_roles`');
-        $this->db->query(
-            'ALTER TABLE `' . $this->db->dbprefix('user_settings') . '` DROP FOREIGN KEY `user_settings_users`',
-        );
+        $prefix = $this->db->dbprefix('');
 
-        // Add table constraints again.
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('appointments') .
-                '`
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_2` FOREIGN KEY (`id_users_customer`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_3` FOREIGN KEY (`id_services`) REFERENCES `' .
-                $this->db->dbprefix('services') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('appointments') .
-                '_ibfk_4` FOREIGN KEY (`id_users_provider`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE',
-        );
+        // Drop the unprefixed constraints.
+        $this->drop_foreign_key('appointments',          'appointments_services');
+        $this->drop_foreign_key('appointments',          'appointments_users_customer');
+        $this->drop_foreign_key('appointments',          'appointments_users_provider');
+        $this->drop_foreign_key('secretaries_providers', 'secretaries_users_secretary');
+        $this->drop_foreign_key('secretaries_providers', 'secretaries_users_provider');
+        $this->drop_foreign_key('services_providers',    'services_providers_users_provider');
+        $this->drop_foreign_key('services_providers',    'services_providers_services');
+        $this->drop_foreign_key('services',              'services_service_categories');
+        $this->drop_foreign_key('users',                 'users_roles');
+        $this->drop_foreign_key('user_settings',         'user_settings_users');
 
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('secretaries_providers') .
-                '`
-            ADD CONSTRAINT `fk_' .
-                $this->db->dbprefix('secretaries_providers') .
-                '_1` FOREIGN KEY (`id_users_secretary`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `fk_' .
-                $this->db->dbprefix('secretaries_providers') .
-                '_2` FOREIGN KEY (`id_users_provider`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services') .
-                '`
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('services') .
-                '_ibfk_1` FOREIGN KEY (`id_service_categories`) REFERENCES `' .
-                $this->db->dbprefix('service_categories') .
-                '` (`id`) ON DELETE SET NULL ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('services_providers') .
-                '`
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('services_providers') .
-                '_ibfk_1` FOREIGN KEY (`id_users`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('services_providers') .
-                '_ibfk_2` FOREIGN KEY (`id_services`) REFERENCES `' .
-                $this->db->dbprefix('services') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('users') .
-                '`
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('users') .
-                '_ibfk_1` FOREIGN KEY (`id_roles`) REFERENCES `' .
-                $this->db->dbprefix('roles') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE',
-        );
-
-        $this->db->query(
-            'ALTER TABLE `' .
-                $this->db->dbprefix('user_settings') .
-                '`
-            ADD CONSTRAINT `' .
-                $this->db->dbprefix('user_settings') .
-                '_ibfk_1` FOREIGN KEY (`id_users`) REFERENCES `' .
-                $this->db->dbprefix('users') .
-                '` (`id`) ON DELETE CASCADE ON UPDATE CASCADE',
-        );
+        // Restore the originally-prefixed constraints.
+        $this->add_foreign_key('appointments',          $prefix . 'appointments_ibfk_2',          'id_users_customer', 'users',    'id');
+        $this->add_foreign_key('appointments',          $prefix . 'appointments_ibfk_3',          'id_services',       'services', 'id');
+        $this->add_foreign_key('appointments',          $prefix . 'appointments_ibfk_4',          'id_users_provider', 'users',    'id');
+        $this->add_foreign_key('secretaries_providers', 'fk_' . $prefix . 'secretaries_providers_1', 'id_users_secretary', 'users', 'id');
+        $this->add_foreign_key('secretaries_providers', 'fk_' . $prefix . 'secretaries_providers_2', 'id_users_provider',  'users', 'id');
+        $this->add_foreign_key('services',              $prefix . 'services_ibfk_1',              'id_service_categories', 'service_categories', 'id', 'SET NULL', 'CASCADE');
+        $this->add_foreign_key('services_providers',    $prefix . 'services_providers_ibfk_1',    'id_users',     'users',    'id');
+        $this->add_foreign_key('services_providers',    $prefix . 'services_providers_ibfk_2',    'id_services',  'services', 'id');
+        $this->add_foreign_key('users',                 $prefix . 'users_ibfk_1',                 'id_roles',     'roles',    'id');
+        $this->add_foreign_key('user_settings',         $prefix . 'user_settings_ibfk_1',         'id_users',     'users',    'id');
     }
 }

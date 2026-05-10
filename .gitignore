@@ -56,6 +56,9 @@ Temporary Items
 pdf/*.pdf
 /__pycache__
 
+# Scanner-generated punch list (regenerable from the scanner script)
+integration/tests/ea-mysql-scan.report.json
+
 
 #web/package-lock.json
 

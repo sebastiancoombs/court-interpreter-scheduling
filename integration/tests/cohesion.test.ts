@@ -13,8 +13,7 @@
  *   metabase         →  GET /api/health (200 with {"status":"ok"})
  *   supabase         →  GET /storage/v1/health (200) — only checked if SUPABASE_URL points at a live local stack
  *   auth-bridge      →  GET /health (200)
- *   metabase-sso     →  GET /health (200, optional)
- *   ea-sync          →  process running (optional)
+ *   metabase-sso     →  GET /health (200) — required since chrome injection lives here
  *
  *   Stitch tests:
  *     [stitch:1] Auth bridge accepts a JWT signed with SUPABASE_JWT_SECRET
@@ -111,7 +110,7 @@ async function generateTestJwt(): Promise<string> {
   await pingService('easyappointments', URLS.ea,                     (r) => r.status === 200 || r.status === 303);
   await pingService('metabase health', `${URLS.metabase}/api/health`,(r) => r.status === 200 && /status/.test(r.text));
   await pingService('auth-bridge health', `${URLS.authBridge}/health`,(r) => r.status === 200);
-  await pingService('metabase-sso health', `${URLS.metabaseSso}/health`, (r) => r.status === 200, false);
+  await pingService('metabase-sso health', `${URLS.metabaseSso}/health`, (r) => r.status === 200);
   await pingService('supabase storage', `${URLS.supabase}/storage/v1/health`, (r) => r.status === 200, false);
 
   console.log('\n\x1b[1m2. Stitches (cross-subsystem auth)\x1b[0m');
@@ -167,6 +166,28 @@ async function generateTestJwt(): Promise<string> {
     name: '[stitch:5] TWILIO_ENABLED defaults to false (no accidental sends)',
     ok: !twilioEnabled,
     detail: `TWILIO_ENABLED=${process.env.TWILIO_ENABLED ?? '<unset>'}`,
+  });
+
+  // [stitch:6] metabase-sso injects the unified JCC topbar into Metabase HTML
+  // responses so Reports wears the same chrome as bcgov + EA.
+  const mb = await fetchOk(`${URLS.metabaseSso}/metabase/`);
+  const injected = /class="cis-topbar"/.test(mb.text)
+    && /data-cis-source="metabase-sso"/.test(mb.text)
+    && /Court Interpreter Scheduling/.test(mb.text);
+  log({
+    name: '[stitch:6] metabase-sso injects unified topbar into Metabase HTML',
+    ok: injected && (mb.status === 200 || mb.status === 302),
+    detail: `HTTP ${mb.status} (${mb.text.length} bytes, topbar=${injected ? 'present' : 'missing'})`,
+  });
+
+  // [stitch:6b] Skip injection when ?layout=embed — leaves Metabase bare for
+  // iframe consumption.
+  const mbEmbed = await fetchOk(`${URLS.metabaseSso}/metabase/?layout=embed`);
+  const embedClean = !/class="cis-topbar"/.test(mbEmbed.text);
+  log({
+    name: '[stitch:6b] ?layout=embed skips topbar injection (iframe-safe)',
+    ok: embedClean,
+    detail: `HTTP ${mbEmbed.status} (topbar=${embedClean ? 'absent' : 'present (bug)'})`,
   });
 
   // -----------------------------------------------------------------

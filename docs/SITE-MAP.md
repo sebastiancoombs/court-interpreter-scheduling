@@ -6,10 +6,10 @@ through the user journey; read the right column to confirm RFP coverage.
 
 > **Subsystem legend**
 > - **bcgov** — `web/`, `api/` — original BC Gov fork, re-skinned for JCC. Owns interpreter directory, ADM/payment forms, audit reports.
-> - **EA** — `easyappointments/` — vendored fork. Owns booking calendar, scheduling wizard, providers, customers, working plan, notifications.
-> - **MB** — Metabase, run from `easyappointments/docker-compose.override.yml`. Owns §5 reporting + dashboards.
-> - **SB** — Supabase, configured under `supabase/`. Owns identity, RLS isolation, audit log, Storage, Realtime, edge functions.
-> - **Bridge** — `integration/` — auth bridge, EA→Supabase replication worker, Metabase SSO sidecar. Glue.
+> - **EA** — `easyappointments/` — vendored fork. Owns booking calendar, scheduling wizard, providers, customers, working plan, notifications. Runs on **PostgreSQL** via the dialect-aware `EA_Migration` helpers — same DB instance as Metabase.
+> - **MB** — Metabase, run from `easyappointments/docker-compose.override.yml`. Owns §5 reporting + dashboards. Stores its own metadata in the `metabase` database on the same Postgres instance as EA.
+> - **SB** — Supabase, configured under `supabase/`. Owns identity, RLS isolation, audit log, Storage, Realtime, edge functions. In production, EA points at the same Supabase Postgres so the entire stack runs against one DB.
+> - **Bridge** — `integration/` — auth bridge, Metabase SSO sidecar (with unified-topbar HTML injection). Glue.
 
 ---
 
@@ -26,7 +26,7 @@ What the signed-in user sees. The frame (topbar, JCC navy + gold) is bcgov; the 
 | Languages | Configurable list | **bcgov** | `:8080/language` |
 | Rates | Per-tier hourly + per-diem | **bcgov** | `:8080/rates` |
 | Audit | Compliance trail | **SB** Studio + Bridge `/audit` | `:54323` (Supabase Studio) or custom `/audit` page reading `app.audit_log` |
-| Reports | Filterable analytics | **MB** | `:8088` (Metabase) |
+| Reports | Filterable analytics | **MB** via Bridge SSO sidecar | `:8091/metabase/*` (proxied; sidecar injects unified JCC topbar so Metabase wears the same chrome as bcgov + EA) |
 | User Roles | Court staff role assignment | **bcgov + SB** (Supabase Auth source-of-truth, bcgov UI for assignment) | `:8080/user-role` |
 | ADM Forms | Payment voucher generation | **bcgov** | `:8080/audit-booking` → ADM modal |
 

@@ -19,13 +19,25 @@ export const env = {
   ea: {
     baseUrl: req('EA_BASE_URL'),
     adminToken: opt('EA_ADMIN_API_TOKEN'),
+    // EA now reads from the same Postgres instance as the rest of the
+    // stack — the `db` block here is kept only for legacy callers (e.g.,
+    // the deprecated ea-sync worker). New code should use the unified
+    // `database.url` Postgres connection below.
     db: {
-      host: req('EA_DB_HOST'),
-      port: parseInt(opt('EA_DB_PORT', '3306'), 10),
-      database: req('EA_DB_NAME'),
-      user: req('EA_DB_USER'),
-      password: req('EA_DB_PASSWORD'),
+      host: opt('EA_DB_HOST', 'postgres'),
+      port: parseInt(opt('EA_DB_PORT', '5432'), 10),
+      database: opt('EA_DB_NAME', 'easyappointments'),
+      user: opt('EA_DB_USER', 'easyappointments'),
+      password: opt('EA_DB_PASSWORD', 'easyappointments'),
     },
+  },
+  // Single Postgres connection shared across EA, Metabase (separate
+  // database in the same instance), and Supabase-Cloud-mirrored writes.
+  database: {
+    url: opt(
+      'DATABASE_URL',
+      'postgres://easyappointments:easyappointments@postgres:5432/easyappointments',
+    ),
   },
   bcgov: { baseUrl: opt('BCGOV_BASE_URL', 'http://localhost:8080') },
   metabase: {
@@ -36,5 +48,11 @@ export const env = {
     authBridge: parseInt(opt('AUTH_BRIDGE_PORT', '8090'), 10),
     metabaseSso: parseInt(opt('METABASE_SSO_PORT', '8091'), 10),
     eaSync: parseInt(opt('EA_SYNC_PORT', '8092'), 10),
+  },
+  authBridge: {
+    topbarCssUrl: opt(
+      'TOPBAR_CSS_URL',
+      `http://localhost:${parseInt(opt('AUTH_BRIDGE_PORT', '8090'), 10)}/topbar.css`,
+    ),
   },
 };
