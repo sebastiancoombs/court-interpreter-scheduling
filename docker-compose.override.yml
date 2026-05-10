@@ -1,0 +1,15 @@
+# Local override — remap ports so EA can run alongside bcgov dev (8080) and the mock-api (8082).
+# Tracked locally only; not committed to upstream.
+
+services:
+  nginx:
+    ports:
+      - '8085:80'
+
+  phpmyadmin:
+    ports:
+      - '8086:80'
+
+  swagger-ui:
+    ports:
+      - '8087:8080'
