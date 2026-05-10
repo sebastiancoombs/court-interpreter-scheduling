@@ -40,7 +40,11 @@ RUN python -m venv /opt/venv \
 FROM composer:2 AS ea-vendor
 WORKDIR /build
 COPY easyappointments/composer.json easyappointments/composer.lock* ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+# The composer image's bundled PHP is newer than EA's locked deps target;
+# the runtime stage runs PHP 8.2 which IS compatible, so we vendor with
+# platform checks disabled. ext-gd is installed in the runtime image.
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction \
+        --ignore-platform-reqs
 
 # -------------------------------------------------------------------------
 # Stage 4 — Install integration Node deps (auth-bridge + metabase-sso)
