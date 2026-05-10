@@ -1,0 +1,60 @@
+# Single-domain front door for the JCC Court Interpreter Scheduling stack.
+#
+# All three companions (bcgov, EA, Metabase) live behind the same hostname,
+# and the path tells Caddy which subsystem owns the route. The user never
+# sees a port change, never sees `/index.php/...`, never sees `/metabase/...`
+# in the URL — the whole product looks like one app.
+#
+# In dev, hit https://cis.local (or http://localhost on :8000). In prod on
+# Railway, the same Caddyfile is mounted with `tls internal` removed and
+# the canonical hostname swapped in via `{$CIS_PUBLIC_HOST}`.
+
+{
+	# Use Caddy's internal CA in dev so https://cis.local works without a
+	# real cert. Railway/prod swaps this out via env override.
+	auto_https disable_redirects
+}
+
+{$CIS_PUBLIC_HOST:cis.local}, http://localhost:8000 {
+	encode zstd gzip
+
+	# ---------------------------------------------------------------
+	# Reports → Metabase via the SSO sidecar (which injects the
+	# unified topbar so Metabase wears the same chrome).
+	# ---------------------------------------------------------------
+	handle_path /reports* {
+		rewrite * /metabase{path}
+		reverse_proxy {$METABASE_SSO_HOST:metabase-sso}:{$METABASE_SSO_PORT:8091}
+	}
+
+	# ---------------------------------------------------------------
+	# EA — public booking wizard + admin calendar + providers/services.
+	# Routed by EA-owned path prefixes. EA's nginx `try_files` rewrites
+	# the request to `index.php` internally; with `$config['index_page']
+	# = ''` set in EA, internal links also generate without the prefix.
+	# ---------------------------------------------------------------
+	@ea path /calendar* /booking* /providers* /customers* /services* /service_categories* \
+	         /admins* /secretaries* /general_settings* /booking_settings* \
+	         /business_settings* /legal_settings* /integration_settings* \
+	         /api/v1/*
+	handle @ea {
+		reverse_proxy {$EA_NGINX_HOST:ea-nginx}:{$EA_NGINX_PORT:80}
+	}
+
+	# ---------------------------------------------------------------
+	# Auth bridge — JWT verifier + topbar.css source of truth.
+	# Exposed under /auth so bcgov + EA + Metabase can all fetch
+	# `/auth/topbar.css` instead of pinning to `:8090`.
+	# ---------------------------------------------------------------
+	handle_path /auth* {
+		reverse_proxy {$AUTH_BRIDGE_HOST:auth-bridge}:{$AUTH_BRIDGE_PORT:8090}
+	}
+
+	# ---------------------------------------------------------------
+	# Everything else falls through to bcgov web (Vue dev server in
+	# dev, the static build behind nginx in prod).
+	# ---------------------------------------------------------------
+	handle {
+		reverse_proxy {$BCGOV_WEB_HOST:host.docker.internal}:{$BCGOV_WEB_PORT:8080}
+	}
+}

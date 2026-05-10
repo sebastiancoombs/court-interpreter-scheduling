@@ -43,7 +43,12 @@ $config['base_url'] = rtrim(! is_cli() ? $protocol . $domain . $request_uri : Co
 | variable so that it is blank.
 |
 */
-$config['index_page'] = 'index.php';
+// Empty so EA generates clean URLs (`/calendar`, `/providers`, …) instead
+// of the legacy `/index.php/calendar` form. The Caddy front-door + EA's
+// own nginx `try_files` rewrite handle the route resolution, so removing
+// the `index.php` prefix here closes the URL-leak seam visible in
+// admin-side internal navigation.
+$config['index_page'] = '';
 
 /*
 |--------------------------------------------------------------------------

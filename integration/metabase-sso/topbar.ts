@@ -25,14 +25,18 @@ const escape = (s: string): string =>
    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 export function renderTopbar(opts: TopbarOptions): string {
-  // Reports link is host-relative on purpose — when the sidecar is reached
-  // at https://example.gov:8091, "Reports" should keep the user on
-  // /metabase/ on that same host. All other tabs are cross-origin so they
-  // get absolute URLs from env.
+  // When EA + bcgov share the unified host (Caddy front door),
+  // root-relative paths land on the right subsystem via path routing.
+  // EA also uses clean paths because Config::index_page is empty.
+  // Reports stays host-relative `/metabase/` — the SSO sidecar serves
+  // itself from the same host the topbar was rendered for.
+  const unified = env.bcgov.baseUrl === env.ea.baseUrl;
+  const eaCalendar   = unified ? `${env.ea.baseUrl}/calendar` : `${env.ea.baseUrl}/index.php/calendar`;
+  const eaAddBooking = unified ? `${env.ea.baseUrl}/booking`  : `${env.ea.baseUrl}/`;
   const links = {
     bookings:     `${env.bcgov.baseUrl}/bookings`,
-    calendar:     `${env.ea.baseUrl}/index.php/calendar`,
-    add_booking:  `${env.ea.baseUrl}/`,
+    calendar:     eaCalendar,
+    add_booking:  eaAddBooking,
     interpreters: `${env.bcgov.baseUrl}/directory`,
     languages:    `${env.bcgov.baseUrl}/language`,
     rates:        `${env.bcgov.baseUrl}/rates`,

@@ -63,28 +63,45 @@ export default class UnifiedTopbar extends Vue {
 
     selectedLocation: number | null = null;
 
-    // Companion URLs — env-driven, fall back to local dev defaults.
+    // Companion URLs — env-driven with smart defaults.
+    // When the page is reached via the Caddy front door (port 8000/8443 or
+    // any deployment without a port suffix) every companion lives on the
+    // same host, so root-relative paths are correct and the URL bar shows
+    // no port-leaks or `/index.php/` prefixes. Direct-port dev hits :8080
+    // and falls back to absolute URLs into the EA + Metabase containers.
     private envOr(key: string, fallback: string): string {
         const w = window as any;
         return (w.CIS_LINKS && w.CIS_LINKS[key]) ?? fallback;
     }
+    private get unified(): boolean {
+        const port = (typeof window !== 'undefined' ? window.location.port : '') ?? '';
+        return port === '' || port === '8000' || port === '8443';
+    }
     get bcgovBase(): string { return this.envOr('bcgov', ''); }
-    get eaBase():    string { return this.envOr('ea',    'http://localhost:8085'); }
-    // Reports go through the metabase-sso sidecar so Metabase wears the
-    // unified topbar (the sidecar injects it into HTML responses). Keep
-    // `metabase` as an override that reads bare Metabase if a deployment
-    // ever wants the address bar to land on Metabase directly.
-    get mbBase():    string { return this.envOr('metabase','http://localhost:8091/metabase'); }
+    get eaBase():    string {
+        return this.envOr('ea', this.unified ? '' : 'http://localhost:8085');
+    }
+    // Reports go through the metabase-sso sidecar (which injects the
+    // unified topbar into Metabase HTML). Caddy mounts the sidecar at
+    // `/reports`; direct-port dev hits the sidecar at :8091/metabase.
+    get mbBase():    string {
+        return this.envOr('metabase', this.unified ? '/reports' : 'http://localhost:8091/metabase');
+    }
 
     get links() {
+        // EA's calendar/booking paths drop `/index.php/` when reached
+        // through the Caddy front door (since `Config::index_page = ''`
+        // and Caddy proxies clean paths to EA's nginx).
+        const eaCalendar    = this.unified ? '/calendar' : `${this.eaBase}/index.php/calendar`;
+        const eaAddBooking  = this.unified ? '/booking'  : `${this.eaBase}/`;
         return {
             bookings:     `${this.bcgovBase}/bookings`,
-            calendar:     `${this.eaBase}/index.php/calendar`,
-            add_booking:  `${this.eaBase}/`,
+            calendar:     eaCalendar,
+            add_booking:  eaAddBooking,
             interpreters: `${this.bcgovBase}/directory`,
             languages:    `${this.bcgovBase}/language`,
             rates:        `${this.bcgovBase}/rates`,
-            reports:      `${this.mbBase}/`,
+            reports:      this.mbBase,
             audit:        `${this.bcgovBase}/audit-booking`,
             admin:        `${this.bcgovBase}/user-role`,
         };
@@ -145,8 +162,10 @@ export default class UnifiedTopbar extends Vue {
 
     mounted() {
         // Load the canonical CSS from the auth-bridge so every subsystem
-        // pulls the same chrome from one place.
-        const href = (window as any).CIS_TOPBAR_CSS ?? 'http://localhost:8090/topbar.css';
+        // pulls the same chrome from one place. Through Caddy that's
+        // `/auth/topbar.css`; direct-port dev pulls from :8090.
+        const href = (window as any).CIS_TOPBAR_CSS
+            ?? (this.unified ? '/auth/topbar.css' : 'http://localhost:8090/topbar.css');
         if (!document.querySelector(`link[href="${href}"]`)) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
