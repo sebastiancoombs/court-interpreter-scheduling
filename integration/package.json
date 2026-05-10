@@ -8,6 +8,7 @@
     "dev:auth": "tsx watch auth-bridge/server.ts",
     "dev:sync": "tsx watch ea-sync/worker.ts",
     "dev:sso":  "tsx watch metabase-sso/server.ts",
+    "test": "tsx tests/cohesion.test.ts",
     "build": "tsc -p tsconfig.json",
     "start:auth": "node dist/auth-bridge/server.js",
     "start:sync": "node dist/ea-sync/worker.js",

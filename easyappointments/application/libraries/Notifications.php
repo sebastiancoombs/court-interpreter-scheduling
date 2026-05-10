@@ -39,8 +39,32 @@ class Notifications
         $this->CI->load->model('settings_model');
 
         $this->CI->load->library('email_messages');
+        $this->CI->load->library('sms_messages'); // JCC fork: Twilio-ready SMS dispatcher
         $this->CI->load->library('ics_file');
         $this->CI->load->library('timezones');
+    }
+
+    /**
+     * JCC fork helper — dispatch the same lifecycle event over SMS to whichever
+     * party has a phone number on file. Sending is gated inside Sms_messages by
+     * the TWILIO_ENABLED env, so this is always safe to call.
+     */
+    private function maybe_send_sms(string $event, array $appointment, array $service, array $provider, array $customer, string $cancellation_reason = ''): void
+    {
+        $send = function (?string $number, string $variant) use ($event, $appointment, $service, $provider, $customer, $cancellation_reason) {
+            if (!$number) return;
+            try {
+                if ($event === 'saved') {
+                    $this->CI->sms_messages->send_appointment_saved($appointment, $provider, $service, $customer, $number, $variant);
+                } elseif ($event === 'deleted') {
+                    $this->CI->sms_messages->send_appointment_deleted($appointment, $provider, $service, $customer, $number, $cancellation_reason, $variant);
+                }
+            } catch (Throwable $e) {
+                $this->log_exception($e, "sms-{$event} to {$variant}", $appointment['id'] ?? null);
+            }
+        };
+        $send($customer['phone_number'] ?? null, 'customer');
+        $send($provider['phone_number'] ?? null, 'provider');
     }
 
     /**
@@ -200,6 +224,9 @@ class Notifications
         } catch (Throwable $e) {
             $this->log_exception($e, 'appointment-saved (general exception)', $appointment['id'] ?? null);
         } finally {
+            // JCC fork — fan out the same lifecycle event over SMS (env-gated).
+            $this->maybe_send_sms('saved', $appointment, $service, $provider, $customer);
+
             config(['language' => $current_language ?? 'english']);
             $this->CI->lang->load('translations');
         }
@@ -342,6 +369,9 @@ class Notifications
             );
             log_message('error', $e->getTraceAsString());
         } finally {
+            // JCC fork — SMS fan-out for cancellations.
+            $this->maybe_send_sms('deleted', $appointment, $service, $provider, $customer, $cancellation_reason);
+
             config(['language' => $current_language ?? 'english']);
             $this->CI->lang->load('translations');
         }
