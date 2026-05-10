@@ -25,13 +25,36 @@
 
     <?php component('company_color_style', ['company_color' => setting('company_color')]); ?>
 
+    <!-- Unified topbar CSS — single source of truth, served by integration/auth-bridge. -->
+    <link rel="stylesheet" href="<?= getenv('CIS_TOPBAR_CSS') ?: 'http://localhost:8090/topbar.css' ?>">
+
     <?php slot('styles'); ?>
 </head>
-<body class="d-flex flex-column h-100">
+<body class="d-flex flex-column h-100 cis-topbar-mounted">
+
+<?php
+    // Map the EA active_menu key to the unified topbar's active_key.
+    $cis_active_map = [
+        'calendar'        => 'calendar',
+        'appointments'    => 'calendar',
+        'customers'       => 'admin',
+        'services'        => 'admin',
+        'service-categories' => 'admin',
+        'providers'       => 'interpreters',
+        'admins'          => 'admin',
+        'secretaries'     => 'admin',
+        'general-settings'=> 'admin',
+        'business-logic'  => 'admin',
+        'booking-settings'=> 'admin',
+        'integrations'    => 'admin',
+    ];
+    $cis_active = $cis_active_map[vars('active_menu') ?? 'calendar'] ?? 'calendar';
+    include __DIR__ . '/../components/cis_topbar.php';
+?>
 
 <main class="flex-shrink-0">
 
-    <?php component('backend_header', ['active_menu' => vars('active_menu')]); ?>
+    <?php /* JCC fork — backend_header replaced by the unified cis_topbar above. */ ?>
 
     <?php slot('content'); ?>
 
