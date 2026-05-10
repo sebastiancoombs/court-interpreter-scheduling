@@ -1,6 +1,7 @@
 from fastapi import Request, status, HTTPException, Depends
 from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 from core import JWTtoken
+from core.supabase_auth import verify_supabase_jwt
 from core.multi_database_middleware import get_db_session
 from sqlalchemy.orm import Session
 from models.user_model import UserModel
@@ -76,12 +77,19 @@ def verify_user(request: Request, token: HTTPAuthorizationCredentials):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
+    # Unified-auth path: Supabase JWTs issued by integration/auth-bridge.
+    # If the token verifies as a Supabase JWT we accept it directly; otherwise
+    # fall through to the legacy Keycloak/OIDC verifier below.
+    supabase_user = verify_supabase_jwt(token.credentials)
+    if supabase_user is not None:
+        return supabase_user
+
     user = JWTtoken.verify_token(token.credentials, credentials_exception, request)
 
     if ("username" not in user or "email" not in user):
         raise credentials_exception
-    elif (user["username"] is None and user["email"] is None ):  
+    elif (user["username"] is None and user["email"] is None ):
         raise credentials_exception
     else:
         return user
