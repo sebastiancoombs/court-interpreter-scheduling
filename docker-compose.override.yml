@@ -1,9 +1,13 @@
 # Combined-stack override:
-# - Remap ports so EA runs alongside bcgov dev (8080) and the mock-api (8082).
-# - Add Metabase as the §5 analytics layer, on the same docker network as EA's Postgres.
+# - Caddy front door at :8000 makes all three companions look like one app
+#   on a single host. Path-based routing handles bcgov / EA / Metabase.
+# - Direct ports (:8085, :8088, :8090, :8091) are still exposed for
+#   developer debugging.
+# - Metabase + EA share the same Postgres instance (different databases).
 
 services:
   nginx:
+    container_name: ea-nginx
     ports:
       - '8085:80'
 
@@ -27,5 +31,93 @@ services:
       - MB_DB_USER=metabase
       - MB_DB_PASS=metabase
       - JAVA_TIMEZONE=America/Los_Angeles
+      - MB_SITE_URL=http://localhost:8000/reports
     depends_on:
       - postgres
+
+  auth-bridge:
+    image: oven/bun:1
+    container_name: cis-auth-bridge
+    working_dir: /app
+    command: ['bun', 'run', '--hot', 'auth-bridge/server.ts']
+    volumes:
+      - ../integration:/app
+    environment:
+      - AUTH_BRIDGE_PORT=8090
+      - SUPABASE_URL=${SUPABASE_URL:-http://supabase:54321}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-super-secret-jwt-token-with-at-least-32-chars}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-dev-service-role}
+    ports:
+      - '8090:8090'
+
+  metabase-sso:
+    image: oven/bun:1
+    container_name: cis-metabase-sso
+    working_dir: /app
+    command: ['bun', 'run', '--hot', 'metabase-sso/server.ts']
+    volumes:
+      - ../integration:/app
+    environment:
+      - METABASE_SSO_PORT=8091
+      - METABASE_SITE_URL=http://metabase:3000
+      - SUPABASE_URL=${SUPABASE_URL:-http://supabase:54321}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-super-secret-jwt-token-with-at-least-32-chars}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-dev-service-role}
+      # Inject the unified topbar's CSS link from the auth-bridge route on
+      # the Caddy front door (not bare :8090) so the link works no matter
+      # where the SSO sidecar is reached from.
+      - TOPBAR_CSS_URL=http://localhost:8000/auth/topbar.css
+      - BCGOV_BASE_URL=http://localhost:8000
+      - EA_BASE_URL=http://localhost:8000
+    ports:
+      - '8091:8091'
+    depends_on:
+      - metabase
+      - auth-bridge
+
+  metabase-setup:
+    image: oven/bun:1
+    container_name: cis-metabase-setup
+    working_dir: /app
+    # Idempotent — exits cleanly when Metabase is already set up. On a
+    # fresh stack it provisions the admin user + EA Postgres data source
+    # so a `docker compose up` opens straight to dashboards.
+    command: ['bun', 'run', 'metabase-setup/init.ts']
+    volumes:
+      - ../integration:/app
+    environment:
+      - METABASE_SITE_URL=http://metabase:3000
+      - METABASE_DB_NAME=EasyAppointments
+      - METABASE_DB_HOST=postgres
+      - METABASE_DB_PORT=5432
+      - METABASE_DB_DBNAME=easyappointments
+      - METABASE_DB_USER=easyappointments
+      - METABASE_DB_PASSWORD=easyappointments
+      - METABASE_ADMIN_EMAIL=admin@cis.local
+      - METABASE_ADMIN_PASSWORD=cisadminpw
+    depends_on:
+      - metabase
+    restart: 'no'
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: cis-caddy
+    ports:
+      - '8000:8000'
+      - '8443:8443'
+    volumes:
+      - ../docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - cis-caddy-data:/data
+      - cis-caddy-config:/config
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      - CIS_PUBLIC_HOST=:8000
+    depends_on:
+      - nginx
+      - metabase-sso
+      - auth-bridge
+
+volumes:
+  cis-caddy-data:
+  cis-caddy-config:
