@@ -1,0 +1,100 @@
+# Unified single-container image for the JCC Court Interpreter Scheduling
+# demo — bcgov Vue frontend + bcgov FastAPI backend + Easy!Appointments
+# (PHP/CodeIgniter) + integration auth-bridge + metabase-sso all running in
+# one Railway service, fronted by nginx. Self-hosted Metabase is intentionally
+# external to this image (it's a separate Railway service) since its JVM
+# footprint pushes hobby-tier memory limits.
+#
+# Build: `docker build -f Dockerfile.unified -t cis-unified .`
+# Run:   `docker run -p 8000:8000 -e PORT=8000 --env-file .env.local cis-unified`
+
+# -------------------------------------------------------------------------
+# Stage 1 — Build the bcgov Vue 2 frontend → static dist/
+# -------------------------------------------------------------------------
+FROM node:18-bookworm AS vue-build
+WORKDIR /build
+COPY web/package*.json ./
+RUN npm ci --legacy-peer-deps
+COPY web/ ./
+# vue-cli-service build emits to dist/; we tolerate lint warnings since the
+# bcgov source ships with them. Failing the build on warnings would force
+# us into a touch-the-Vue-code refactor we explicitly avoided.
+RUN npm run build || (echo "::warning::vue build failed, retrying with --skip-plugins lint"; npm run build -- --skip-plugins lint)
+
+# -------------------------------------------------------------------------
+# Stage 2 — Install bcgov FastAPI Python deps into a venv
+# -------------------------------------------------------------------------
+FROM python:3.11-slim-bookworm AS api-deps
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+COPY api/requirements.txt ./
+RUN python -m venv /opt/venv \
+ && /opt/venv/bin/pip install --upgrade pip \
+ && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# -------------------------------------------------------------------------
+# Stage 3 — Install Easy!Appointments PHP deps via composer
+# -------------------------------------------------------------------------
+FROM composer:2 AS ea-vendor
+WORKDIR /build
+COPY easyappointments/composer.json easyappointments/composer.lock* ./
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+
+# -------------------------------------------------------------------------
+# Stage 4 — Install integration Node deps (auth-bridge + metabase-sso)
+# -------------------------------------------------------------------------
+FROM node:22-bookworm AS integration-deps
+WORKDIR /build
+COPY integration/package*.json ./
+RUN npm ci
+
+# -------------------------------------------------------------------------
+# Stage 5 — Final runtime: nginx + PHP-FPM + Python + Node + supervisord
+# -------------------------------------------------------------------------
+FROM debian:bookworm-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PORT=8000 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# nginx, php-fpm, python runtime, node, supervisor, gettext (for envsubst
+# at startup so the nginx.conf can templatize service ports).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl gettext-base supervisor \
+        nginx \
+        php8.2-fpm php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl \
+        php8.2-pgsql php8.2-zip php8.2-intl php8.2-gd \
+        python3.11 python3.11-venv libpq5 \
+        nodejs npm \
+    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/* \
+    && mkdir -p /run/nginx /run/php /var/log/cis
+
+# Vue build → /var/www/html/web
+COPY --from=vue-build /build/dist/ /var/www/html/web/
+
+# FastAPI source + Python venv
+COPY --from=api-deps /opt/venv/ /opt/venv/
+COPY api/ /opt/api/
+
+# EA source + composer vendor → /var/www/html/ea
+COPY easyappointments/ /var/www/html/ea/
+COPY --from=ea-vendor /build/vendor/ /var/www/html/ea/vendor/
+
+# Integration services + node_modules
+COPY integration/ /opt/integration/
+COPY --from=integration-deps /build/node_modules/ /opt/integration/node_modules/
+
+# Runtime configs (nginx routing, php-fpm pool, supervisord process tree)
+COPY docker/unified/nginx.conf      /etc/nginx/nginx.conf.tmpl
+COPY docker/unified/supervisord.conf /etc/supervisor/supervisord.conf
+COPY docker/unified/entrypoint.sh    /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+ && ln -sf /opt/venv/bin/python /usr/local/bin/python \
+ && ln -sf /opt/venv/bin/uvicorn /usr/local/bin/uvicorn
+
+EXPOSE 8000
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

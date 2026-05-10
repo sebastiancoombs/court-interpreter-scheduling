@@ -14,7 +14,7 @@ max_rows = 1000
 [db]
 port = 54322
 shadow_port = 54320
-major_version = 15
+major_version = 17
 
 [studio]
 enabled = true
@@ -68,8 +68,9 @@ allowed_mime_types = ["application/pdf"]
 enabled = true
 inspector_port = 8083
 
-[functions]
-verify_jwt = true
+# Per-function settings — newer Supabase CLI requires functions.<name>
+# blocks. Empty for now; defaults apply to every function under
+# `supabase/functions/*` (verify_jwt = true).
 
 [analytics]
 enabled = true

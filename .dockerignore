@@ -1,0 +1,38 @@
+**/.git
+**/.gitignore
+**/node_modules
+**/dist
+**/build
+**/.next
+**/__pycache__
+**/.pytest_cache
+**/.venv
+**/venv
+**/.idea
+**/.vscode
+**/.DS_Store
+
+# EA bloat that's regenerated on container build / runtime
+easyappointments/storage/cache/*
+easyappointments/storage/logs/*
+easyappointments/storage/sessions/*
+easyappointments/storage/uploads/*
+easyappointments/docker/mysql
+easyappointments/docker/postgres
+easyappointments/docker/metabase
+easyappointments/docker/baikal
+easyappointments/docker/openldap
+
+# Local-only configs + secrets
+.env.local
+.env
+**/.env.local
+
+# Big binaries / requirements docs not needed for build
+RFP_*.pdf
+*.zip
+*.tar.gz
+
+# Editor / OS
+*.swp
+*.swo
