@@ -9,7 +9,7 @@
     "lint": "vue-cli-service lint",
     "cypress:open": "cd tests && cypress open",
     "test": "jest",
-    "scan:mobile": "node scripts/mobile-scan.mjs"
+    "check:mobile": "node scripts/mobile-check.mjs"
   },
   "resolutions": {
     "normalize-url": "^4.5.1",
@@ -67,6 +67,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-vue": "^6.2.2",
     "jest": "^30.3.0",
+    "playwright": "^1.59.1",
     "raw-loader": "^4.0.2",
     "sass": "^1.25.0",
     "sass-loader": "^10.5.2",
