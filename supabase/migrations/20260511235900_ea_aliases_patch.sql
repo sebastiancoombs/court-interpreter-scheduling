@@ -25,7 +25,7 @@ SELECT
     (bd.date::date + COALESCE(bd.start_time, '00:00')::time)                         AS start_datetime,
     (bd.date::date + COALESCE(bd.finish_time, '00:00')::time)                        AS end_datetime,
     b.adm_detail                                                                     AS notes,
-    COALESCE(b.hash, b.qr_signdate, b.id::text)                                      AS hash,
+    b.hash                                                                           AS hash,
     0::smallint                                                                      AS is_unavailability,
     b.interpreter_id                                                                 AS id_users_provider,
     NULL::integer                                                                    AS id_users_customer,
@@ -75,37 +75,44 @@ BEGIN
     RETURNING id INTO new_booking_id;
 
     -- booking_dates row (required for booking_cases FK)
-    IF NEW.start_datetime IS NOT NULL THEN
-        INSERT INTO public.booking_dates (
-            booking_id, date, start_time, finish_time, interpreter_id)
-        VALUES (
-            new_booking_id,
-            NEW.start_datetime::date,
-            to_char(NEW.start_datetime, 'HH24:MI'),
-            to_char(COALESCE(NEW.end_datetime, NEW.start_datetime), 'HH24:MI'),
-            NEW.id_users_provider
-        )
-        RETURNING id INTO new_bd_id;
+    IF NEW.start_datetime IS NULL THEN
+        RAISE EXCEPTION 'ea_appointments INSERT requires start_datetime';
+    END IF;
 
-        -- booking_cases row — links language via interpreter_language
-        IF NEW.id_services IS NOT NULL THEN
-            SELECT il.id INTO il_id
-            FROM   public.interpreter_language il
-            WHERE  il.interpreter_id = NEW.id_users_provider
-              AND  il.language_id    = NEW.id_services
-            LIMIT 1;
+    INSERT INTO public.booking_dates (
+        booking_id, date, start_time, finish_time, interpreter_id)
+    VALUES (
+        new_booking_id,
+        NEW.start_datetime::date,
+        to_char(NEW.start_datetime, 'HH24:MI'),
+        to_char(COALESCE(NEW.end_datetime, NEW.start_datetime), 'HH24:MI'),
+        NEW.id_users_provider
+    )
+    RETURNING id INTO new_bd_id;
 
-            INSERT INTO public.booking_cases (
-                booking_date_id, interpreter_language_id,
-                federal, requested_by, method_of_appearance)
-            VALUES (
-                new_bd_id,
-                il_id,          -- may be NULL if interpreter doesn't offer this language yet
-                false,
-                'Court',
-                'In-Person'
-            );
+    -- booking_cases row — links language via interpreter_language
+    IF NEW.id_services IS NOT NULL THEN
+        SELECT il.id INTO il_id
+        FROM   public.interpreter_language il
+        WHERE  il.interpreter_id = NEW.id_users_provider
+          AND  il.language_id    = NEW.id_services
+        LIMIT 1;
+
+        IF il_id IS NULL THEN
+            RAISE EXCEPTION 'interpreter % does not offer service (language) % — add them via ea_services_providers first',
+                NEW.id_users_provider, NEW.id_services;
         END IF;
+
+        INSERT INTO public.booking_cases (
+            booking_date_id, interpreter_language_id,
+            federal, requested_by, method_of_appearance)
+        VALUES (
+            new_bd_id,
+            il_id,
+            false,
+            'Court',
+            'In-Person'
+        );
     END IF;
 
     NEW.id := new_booking_id;
@@ -137,26 +144,36 @@ BEGIN
     ORDER  BY id ASC
     LIMIT  1;
 
-    IF bd_id IS NOT NULL AND NEW.start_datetime IS NOT NULL THEN
-        UPDATE public.booking_dates
-           SET date           = NEW.start_datetime::date,
-               start_time     = to_char(NEW.start_datetime, 'HH24:MI'),
-               finish_time    = to_char(COALESCE(NEW.end_datetime, NEW.start_datetime), 'HH24:MI'),
-               interpreter_id = NEW.id_users_provider
-         WHERE id = bd_id;
+    IF bd_id IS NULL THEN
+        RAISE EXCEPTION 'ea_appointments UPDATE: no booking_dates row found for booking %', OLD.id;
+    END IF;
+    IF NEW.start_datetime IS NULL THEN
+        RAISE EXCEPTION 'ea_appointments UPDATE requires start_datetime';
+    END IF;
 
-        -- Update booking_cases language if id_services changed
-        IF NEW.id_services IS NOT NULL AND NEW.id_services IS DISTINCT FROM OLD.id_services THEN
-            SELECT il.id INTO il_id
-            FROM   public.interpreter_language il
-            WHERE  il.interpreter_id = NEW.id_users_provider
-              AND  il.language_id    = NEW.id_services
-            LIMIT 1;
+    UPDATE public.booking_dates
+       SET date           = NEW.start_datetime::date,
+           start_time     = to_char(NEW.start_datetime, 'HH24:MI'),
+           finish_time    = to_char(COALESCE(NEW.end_datetime, NEW.start_datetime), 'HH24:MI'),
+           interpreter_id = NEW.id_users_provider
+     WHERE id = bd_id;
 
-            UPDATE public.booking_cases
-               SET interpreter_language_id = il_id
-             WHERE booking_date_id = bd_id;
+    -- Update booking_cases language if id_services changed
+    IF NEW.id_services IS NOT NULL AND NEW.id_services IS DISTINCT FROM OLD.id_services THEN
+        SELECT il.id INTO il_id
+        FROM   public.interpreter_language il
+        WHERE  il.interpreter_id = NEW.id_users_provider
+          AND  il.language_id    = NEW.id_services
+        LIMIT 1;
+
+        IF il_id IS NULL THEN
+            RAISE EXCEPTION 'interpreter % does not offer service (language) %',
+                NEW.id_users_provider, NEW.id_services;
         END IF;
+
+        UPDATE public.booking_cases
+           SET interpreter_language_id = il_id
+         WHERE booking_date_id = bd_id;
     END IF;
 
     RETURN NEW;
