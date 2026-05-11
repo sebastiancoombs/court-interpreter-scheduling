@@ -33,6 +33,15 @@ module.exports = {
         appendTsSuffixTo: [/\.vue$/],
         transpileOnly: true
       });
+
+    // Disable the legacy `optimize-css` (cssnano 4) plugin shipped with
+    // @vue/cli-service 4.x — it can't tokenize the `/`-as-slash output
+    // modern sass emits when compiling Bootstrap 4's SCSS (e.g.
+    // `0.85rem 1rem / 2`). Bundle is ~30% larger un-minified, fine for
+    // demo; revisit when we move to @vue/cli-service 5 + cssnano 5.
+    if (config.plugins.has('optimize-css')) {
+      config.plugins.delete('optimize-css');
+    }
   },
   parallel: false // https://stackoverflow.com/questions/59951379/vue-cli-upgrade-from-v3-to-v4-breaks-build-process-with-thread-loader-error-can
 };

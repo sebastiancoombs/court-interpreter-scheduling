@@ -8,7 +8,9 @@ WORKDIR /app
 # OpenSSL 3.0 (Node 17+) breaks the old webpack 4 + terser bundle
 # bcgov ships. `--openssl-legacy-provider` restores the v1.1 algorithms
 # the bundler still calls into.
-ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV NODE_OPTIONS=--openssl-legacy-provider \
+    VUE_APP_RUN_IN_DOCKER=true \
+    WEB_BASE_HREF=/
 COPY package*.json ./
 # `--legacy-peer-deps` because the bcgov package.json predates npm's
 # stricter peer-dep resolver. Fallback to `npm install` if `npm ci` errors
@@ -21,11 +23,11 @@ COPY . .
 RUN npm run build || npm run build -- --skip-plugins lint
 
 FROM nginx:1.27-alpine AS runtime
-RUN apk add --no-cache gettext
 COPY --from=build /app/dist /usr/share/nginx/html
-COPY default.conf.tmpl /etc/nginx/templates/default.conf.tmpl
+# nginx:alpine processes `*.template` files in /etc/nginx/templates/ via
+# its baked-in `/docker-entrypoint.d/20-envsubst-on-templates.sh`, outputs
+# to /etc/nginx/conf.d/. Suffix must be `.template`, not `.tmpl`.
+COPY default.conf.template /etc/nginx/templates/default.conf.template
 ENV PORT=8080
 EXPOSE 8080
-# nginx:alpine auto-runs the `/docker-entrypoint.d/*` scripts which
-# substitute env vars in /etc/nginx/templates/*.tmpl into /etc/nginx/conf.d/.
 CMD ["nginx", "-g", "daemon off;"]
