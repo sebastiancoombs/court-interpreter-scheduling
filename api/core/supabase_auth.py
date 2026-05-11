@@ -6,56 +6,101 @@ backend without re-authenticating. Existing Keycloak / OIDC flow in
 ``core.JWTtoken`` continues to work alongside this — ``core.auth.verify_user``
 tries Supabase first and falls back to the existing flow.
 
-Required env:
+Modern Supabase projects (created 2024+) sign JWTs **asymmetrically**
+(ES256 / RS256) and expose a JWKS endpoint with the public key — there is
+no shared symmetric secret to paste into env. Legacy projects still use
+HS256 with a shared secret. The verifier supports both:
 
-    SUPABASE_JWT_SECRET   The HS256 signing key from the Supabase project.
-                          Same secret used by ``integration/shared/jwt.ts``.
-
-Optional env:
-
-    SUPABASE_AUDIENCE     Defaults to "authenticated".
+  - If ``SUPABASE_JWKS_URL`` is set (or derivable from ``SUPABASE_URL``),
+    fetch the signing key set and verify asymmetrically.
+  - Otherwise fall back to HS256 with ``SUPABASE_JWT_SECRET``.
 
 The verified JWT payload is mapped to the user dict shape the rest of the
 codebase already expects::
 
     {
-        "username": <str>,    # auth.users.email or auth.users.user_metadata.username
+        "username": <str>,    # email or user_metadata.username
         "email":    <str>,
         "user_id":  <uuid>,   # auth.users.id (sub claim)
-        "roles":    <list[str]>,  # from app_metadata.roles or app.roles join
+        "roles":    <list[str]>,  # from app_metadata.roles
         "source":   "supabase",
     }
 """
 from __future__ import annotations
 
+import logging
 import os
 from typing import Optional
 
-import jwt  # PyJWT — already a transitive dep via fastapi-users / python-jose
+import jwt
+from jwt import PyJWKClient
 
+logger = logging.getLogger(__name__)
 
+# Env-driven config. Read once at import time.
+SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+SUPABASE_JWKS_URL = os.getenv("SUPABASE_JWKS_URL") or (
+    f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json" if SUPABASE_URL else None
+)
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 SUPABASE_AUDIENCE = os.getenv("SUPABASE_AUDIENCE", "authenticated")
 
+_jwks_client: Optional[PyJWKClient] = None
+
+
+def _resolve_signing_key(token: str):
+    """Pull the public key for this token from the JWKS endpoint.
+
+    PyJWKClient caches the key set so we only refetch when the kid rotates.
+    """
+    global _jwks_client
+    if _jwks_client is None:
+        if not SUPABASE_JWKS_URL:
+            return None
+        _jwks_client = PyJWKClient(SUPABASE_JWKS_URL)
+    try:
+        return _jwks_client.get_signing_key_from_jwt(token).key
+    except jwt.PyJWKClientError as e:
+        logger.debug("JWKS lookup failed: %s", e)
+        return None
+
 
 def verify_supabase_jwt(token: str) -> Optional[dict]:
-    """Return a user dict if the token is a valid Supabase JWT, else None.
+    """Return a user dict if the token verifies, else None.
 
     Returns ``None`` (not an exception) on failure so the caller can
     transparently fall back to the legacy Keycloak/OIDC verifier.
     """
-    if not SUPABASE_JWT_SECRET or not token:
+    if not token:
         return None
 
+    payload = None
     try:
-        payload = jwt.decode(
-            token,
-            SUPABASE_JWT_SECRET,
-            algorithms=["HS256"],
-            audience=SUPABASE_AUDIENCE,
-            options={"require": ["sub", "exp"]},
-        )
-    except jwt.PyJWTError:
+        if SUPABASE_JWKS_URL:
+            # Asymmetric path — modern Supabase projects.
+            key = _resolve_signing_key(token)
+            if key is None:
+                return None
+            payload = jwt.decode(
+                token,
+                key,
+                algorithms=["ES256", "RS256"],
+                audience=SUPABASE_AUDIENCE,
+                options={"require": ["sub", "exp"]},
+            )
+        elif SUPABASE_JWT_SECRET:
+            # Legacy HS256 — older Supabase projects or self-signed test JWTs.
+            payload = jwt.decode(
+                token,
+                SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                audience=SUPABASE_AUDIENCE,
+                options={"require": ["sub", "exp"]},
+            )
+        else:
+            return None
+    except jwt.PyJWTError as e:
+        logger.debug("Supabase JWT verification failed: %s", e)
         return None
 
     user_metadata = payload.get("user_metadata") or {}

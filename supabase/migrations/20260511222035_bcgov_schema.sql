@@ -1,5 +1,5 @@
--- bcgov schema, captured from  against PostgreSQL 15.
--- Re-generate via api/scripts/dump_schema.sh after model/migration changes.
+-- bcgov schema, captured from `alembic upgrade head` against PostgreSQL 15.
+-- Re-generate via `bash api/scripts/dump_schema.sh` after model changes.
 
 --
 -- PostgreSQL database dump
@@ -19,13 +19,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
--- *not* creating schema, since initdb creates it
-
 
 --
 -- Name: booking_interpret_for; Type: TYPE; Schema: public; Owner: -

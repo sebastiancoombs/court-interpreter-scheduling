@@ -70,19 +70,33 @@ rm -f supabase/migrations/*_bcgov_schema.sql supabase/migrations/*_bcgov_seed_da
     | grep -v '^\\restrict' | grep -v '^\\unrestrict'
 } > "$SCHEMA_OUT"
 
-# Seed-data dump — only the tables bcgov's alembic chain bulk_insert'd into.
-# Skipping `interpreter`, `language`, `interpreter_language` since those come
-# from the gitignored .xlsx PII seeds we don't ship.
+# Seed-data dump — auto-captures every non-empty table EXCEPT a skip-list
+# for tables whose seed data is irrelevant or sensitive:
+#   - alembic_version: alembic state, not real data
+#   - interpreter / interpreter_language: PII placeholders from our stub
+#     xlsx; real data comes from a separate (gitignored) seed artifact
+# Anything else with rows after `alembic upgrade head` lands in the
+# production seed migration. Means new bcgov bulk_insert calls in future
+# upstream pulls get picked up automatically.
+SKIP_TABLES_RE='^(alembic_version|interpreter|interpreter_language)$'
+SEED_TABLES=$(docker exec "$CONTAINER" psql -U postgres -d cisdb -At -c \
+  "SELECT relname FROM pg_stat_user_tables WHERE n_live_tup > 0 ORDER BY relname;" \
+  | grep -vE "$SKIP_TABLES_RE" || true)
+
 {
   echo "-- bcgov seed data — equivalent to what bcgov alembic op.bulk_insert"
   echo "-- did during upgrade. Companion to the bcgov_schema.sql dump."
   echo "-- Re-generate via \`bash api/scripts/dump_schema.sh\`."
+  echo "--"
+  echo "-- Tables included:"
+  for t in $SEED_TABLES; do echo "--   $t"; done
   echo ""
-  docker exec "$CONTAINER" pg_dump --data-only --no-owner --no-acl --no-comments \
-    --inserts --on-conflict-do-nothing \
-    --table=geo_status --table=role --table=rate \
-    -U postgres cisdb \
-    | grep -v '^\\restrict' | grep -v '^\\unrestrict'
+  for t in $SEED_TABLES; do
+    docker exec "$CONTAINER" pg_dump --data-only --no-owner --no-acl --no-comments \
+      --inserts --on-conflict-do-nothing --table="$t" \
+      -U postgres cisdb \
+      | grep -v '^\\restrict' | grep -v '^\\unrestrict' | grep -v '^--$' | grep -vE '^-- (Dumped|PostgreSQL)' || true
+  done
 } > "$SEED_OUT"
 
 echo "✓ wrote $SCHEMA_OUT"
