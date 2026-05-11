@@ -24,18 +24,10 @@ RUN npm run build || npm run build -- --skip-plugins lint
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
-# nginx:alpine processes `*.template` files in /etc/nginx/templates/ via
-# its baked-in `/docker-entrypoint.d/20-envsubst-on-templates.sh`, outputs
-# to /etc/nginx/conf.d/. Suffix must be `.template`, not `.tmpl`.
-COPY default.conf.template /etc/nginx/templates/default.conf.template
-
-# `NGINX_ENVSUBST_FILTER=PORT` restricts envsubst to ONLY substitute
-# `${PORT}` — without this, the entrypoint also replaces nginx's
-# built-in variables (`$uri`, `$args`, `$is_args`, etc.) with empty
-# strings, silently corrupting the rendered config so nginx never
-# binds. The 404 "Application not found" page on Railway's edge is
-# what you get when the container starts but the port stays closed.
-ENV NGINX_ENVSUBST_FILTER=PORT \
-    PORT=8080
-EXPOSE 8080
+# Static config, no template. Drops nginx-alpine's envsubst entrypoint
+# pass entirely (it was corrupting nginx's native $-variables and
+# silently breaking the rendered config). nginx listens on 80; Railway
+# detects the open TCP port and routes external traffic to it.
+COPY default.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
