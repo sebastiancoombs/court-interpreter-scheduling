@@ -2,9 +2,12 @@
     <div class="app-outer fill-body" id="app">
         <unified-topbar/>
         <main class="app-content fill-body">
-            <router-view/>
+            <transition name="cis-page" mode="out-in">
+                <router-view :key="$route.path"/>
+            </transition>
         </main>
         <navigation-footer id="footer" />
+        <b-toaster name="b-toaster-bottom-right"/>
     </div>
 </template>
 

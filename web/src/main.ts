@@ -6,6 +6,8 @@ import VueCookies from "vue-cookies"
 import routes from "@/routes";
 import store from "@/store";
 import http from "./plugins/http";
+import ToastPlugin from './plugins/toast'
+import EmptyState from './components/utils/EmptyState.vue'
 import "./filters";
 import LoadingSpinner from "./components/utils/LoadingSpinner.vue";
 
@@ -27,8 +29,10 @@ Vue.use(BootstrapVueIcons);
 Vue.use(VueRouter);
 Vue.use(VueCookies);
 Vue.use(http);
+Vue.use(ToastPlugin);
 // Vue.use(UpdatePrototype);
 Vue.component('loading-spinner', LoadingSpinner);
+Vue.component('empty-state', EmptyState);
 
 
 

@@ -161,11 +161,10 @@ export default class UnifiedTopbar extends Vue {
     logout() { SessionManager.logout(this.$store); }
 
     mounted() {
-        // Load the canonical CSS from the auth-bridge so every subsystem
-        // pulls the same chrome from one place. Through Caddy that's
-        // `/auth/topbar.css`; direct-port dev pulls from :8090.
-        const href = (window as any).CIS_TOPBAR_CSS
-            ?? (this.unified ? '/auth/topbar.css' : 'http://localhost:8090/topbar.css');
+        // Load the canonical topbar CSS so any companion (EA, Metabase)
+        // that injects this component also gets the design tokens.
+        // Override at runtime via window.CIS_TOPBAR_CSS.
+        const href = (window as any).CIS_TOPBAR_CSS ?? '/topbar.css';
         if (!document.querySelector(`link[href="${href}"]`)) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';

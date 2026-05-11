@@ -248,3 +248,137 @@ header[name="menu-bar"] .badge.badge-danger {
   color: #0f172a;
   margin: 0 0 1rem;
 }
+
+// ===================================================================
+// Page transitions
+// ===================================================================
+.cis-page-enter-active, .cis-page-leave-active {
+  transition: opacity .18s ease, transform .18s ease;
+}
+.cis-page-enter    { opacity: 0; transform: translateY(6px); }
+.cis-page-leave-to { opacity: 0; transform: translateY(-4px); }
+
+// ===================================================================
+// Toast / snackbar (BootstrapVue b-toast)
+// ===================================================================
+.b-toaster-bottom-right {
+  bottom: 1.5rem !important;
+  right: 1.5rem !important;
+}
+.b-toast .toast {
+  border-radius: .625rem;
+  box-shadow: 0 8px 32px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.08);
+  border: none;
+  min-width: 280px;
+  max-width: 420px;
+  overflow: hidden;
+}
+.b-toast-success .toast-header { background: #15803d; color: #fff; border-bottom-color: rgba(255,255,255,.15); }
+.b-toast-danger  .toast-header { background: #dc2626; color: #fff; border-bottom-color: rgba(255,255,255,.15); }
+.b-toast-info    .toast-header { background: #0369a1; color: #fff; border-bottom-color: rgba(255,255,255,.15); }
+.b-toast-warning .toast-header { background: #d97706; color: #fff; border-bottom-color: rgba(255,255,255,.15); }
+.b-toast .toast-header .close { color: rgba(255,255,255,.8) !important; text-shadow: none; }
+.b-toast .toast-body { font-size: .9rem; padding: .75rem 1rem; }
+
+// ===================================================================
+// Form validation — colored borders + inline error icons
+// ===================================================================
+.form-control.is-invalid,
+.custom-select.is-invalid {
+  border-color: #dc3545 !important;
+  background-image: none;
+  &:focus { box-shadow: 0 0 0 3px rgba(220,53,69,.2) !important; }
+}
+.form-control.is-valid,
+.custom-select.is-valid {
+  border-color: #198754 !important;
+  background-image: none;
+  &:focus { box-shadow: 0 0 0 3px rgba(25,135,84,.2) !important; }
+}
+.invalid-feedback {
+  display: flex !important;
+  align-items: center;
+  gap: .3rem;
+  color: #b91c1c;
+  font-size: .8125rem;
+  font-weight: 500;
+  margin-top: .3rem;
+  &::before {
+    content: '!';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 50%;
+    font-size: .625rem;
+    font-weight: 700;
+  }
+}
+.valid-feedback {
+  color: #15803d;
+  font-size: .8125rem;
+  font-weight: 500;
+  margin-top: .3rem;
+}
+
+// ===================================================================
+// Data table — sortable header indicators
+// ===================================================================
+.table thead th[aria-sort],
+.table thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+  padding-right: 1.75rem;
+  position: relative;
+  &::after {
+    content: '⇅';
+    position: absolute;
+    right: .55rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: .4;
+    font-size: .75rem;
+    line-height: 1;
+  }
+  &[aria-sort="ascending"]::after  { content: '↑'; opacity: 1; }
+  &[aria-sort="descending"]::after { content: '↓'; opacity: 1; }
+  &:hover { background-color: #001a3d !important; }
+  &:hover::after { opacity: 1; }
+}
+
+// ===================================================================
+// Empty state component
+// ===================================================================
+.cis-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #64748b;
+
+  &__icon {
+    font-size: 3rem;
+    color: #cbd5e1;
+    margin-bottom: 1.25rem;
+    line-height: 1;
+  }
+  &__title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: #475569;
+    margin: 0 0 .5rem;
+  }
+  &__body {
+    font-size: .9375rem;
+    margin: 0 auto;
+    max-width: 34rem;
+    line-height: 1.55;
+  }
+  .btn { margin-top: 1.25rem; }
+}

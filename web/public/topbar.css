@@ -1,0 +1,184 @@
+/*
+ * CIS Unified Topbar — canonical design tokens + chrome CSS.
+ * Load from any companion: <link rel="stylesheet" href="/topbar.css">
+ * Single source of truth for the court navy/gold brand palette shared
+ * across bcgov-api (Vue), EasyAppointments, and Metabase.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --cis-navy:       #002F65;
+    --cis-navy-dark:  #001a3d;
+    --cis-gold:       #C19A36;
+    --cis-gold-dark:  #a8852f;
+    --cis-slate:      #5b6b80;
+    --cis-surface:    #f5f7fb;
+    --cis-border:     #e5e7eb;
+    --cis-text:       #0f172a;
+    --cis-text-muted: #64748b;
+    --cis-success:    #15803d;
+    --cis-danger:     #dc2626;
+    --cis-font:       'Inter', 'BC Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cis-radius:     0.5rem;
+    --cis-radius-lg:  0.75rem;
+    --cis-shadow:     0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.05);
+    --cis-shadow-md:  0 4px 12px rgba(0,51,102,.12);
+    --cis-shadow-lg:  0 8px 32px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.08);
+}
+
+.cis-topbar *, .cis-topbar *::before, .cis-topbar *::after { box-sizing: border-box; }
+
+.cis-topbar {
+    font-family: var(--cis-font);
+    background: linear-gradient(180deg, var(--cis-navy-dark) 0%, var(--cis-navy) 100%);
+    border-bottom: 3px solid var(--cis-gold);
+    box-shadow: var(--cis-shadow-md);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    -webkit-font-smoothing: antialiased;
+}
+
+.cis-topbar__brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.cis-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    text-decoration: none;
+    color: #fff;
+    flex-shrink: 0;
+}
+.cis-brand:hover { color: #fff; text-decoration: none; opacity: .9; }
+.cis-brand__mark svg { display: block; }
+.cis-brand__meta { display: flex; flex-direction: column; line-height: 1.2; }
+.cis-brand__pre {
+    font-size: .7rem;
+    font-weight: 400;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.65);
+}
+.cis-brand__name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: .005em;
+}
+
+.cis-topbar__actions { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+.cis-court-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: rgba(255,255,255,.1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") no-repeat right .7rem center;
+    background-size: 10px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px;
+    color: #fff;
+    font-family: var(--cis-font);
+    font-size: .85rem;
+    padding: .3rem 2rem .3rem .9rem;
+    cursor: pointer;
+    transition: background-color .15s;
+}
+.cis-court-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(193,154,54,.35);
+    background-color: rgba(255,255,255,.16);
+}
+.cis-court-select option { color: #1f2937; background: #fff; }
+
+.cis-user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    color: #fff;
+    font-family: var(--cis-font);
+    font-size: .85rem;
+    font-weight: 500;
+    padding: .3rem .9rem .3rem .4rem;
+    cursor: pointer;
+    transition: background-color .15s;
+    white-space: nowrap;
+}
+.cis-user-pill:hover { background: rgba(255,255,255,.18); }
+
+.cis-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    background: var(--cis-gold);
+    color: var(--cis-navy-dark);
+    border-radius: 50%;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    flex-shrink: 0;
+}
+
+.cis-subnav {
+    display: flex;
+    align-items: stretch;
+    padding: 0 1.5rem;
+    gap: .125rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.cis-subnav::-webkit-scrollbar { display: none; }
+
+.cis-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: .55rem .85rem;
+    font-family: var(--cis-font);
+    font-size: .8375rem;
+    font-weight: 500;
+    color: rgba(255,255,255,.72);
+    text-decoration: none;
+    border-radius: .375rem .375rem 0 0;
+    white-space: nowrap;
+    transition: color .12s, background-color .12s;
+    border-bottom: 3px solid transparent;
+    position: relative;
+    top: 1px;
+}
+.cis-tab:hover { color: #fff; background: rgba(255,255,255,.08); text-decoration: none; }
+.cis-tab[data-active] {
+    color: #fff;
+    background: rgba(255,255,255,.1);
+    border-bottom-color: var(--cis-gold);
+    font-weight: 600;
+}
+
+.cis-tab__badge {
+    margin-left: auto;
+    margin-right: .25rem;
+    padding: .2em .5em;
+    background: rgba(220,38,38,.85);
+    color: #fff;
+    border-radius: 999px;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    align-self: center;
+}
+
+@media (max-width: 640px) {
+    .cis-topbar__brand-row { padding: .5rem 1rem; }
+    .cis-brand__pre { display: none; }
+    .cis-subnav { padding: 0 .5rem; }
+    .cis-tab { padding: .5rem .6rem; font-size: .8rem; }
+}
