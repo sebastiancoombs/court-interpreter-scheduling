@@ -29,4 +29,4 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # own $-variables ($uri, $host, etc.) are never touched.
 COPY default.conf /etc/nginx/conf.d/default.conf.tpl
 EXPOSE 80
-CMD ["sh", "-c", "RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf); sed \"s/__RESOLVER__/$RESOLVER/g\" /etc/nginx/conf.d/default.conf.tpl > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "R=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf); echo \"$R\" | grep -q ':' && R=\"[$R]\"; sed \"s/__RESOLVER__/$R/g\" /etc/nginx/conf.d/default.conf.tpl > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
