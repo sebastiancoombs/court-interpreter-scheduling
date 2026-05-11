@@ -49,12 +49,12 @@ body { background: #f5f7fb; }
   &.badge-secondary { background-color: #e2e8f0 !important; color: #334155 !important; }
 }
 
-// Form inputs — clean focus ring
+// Form inputs — clean focus ring (navy-based, matches .btn focus)
 .form-control, .custom-select, .b-form-datepicker {
   transition: border-color .15s ease, box-shadow .15s ease;
   &:focus {
-    border-color: #6b8eff;
-    box-shadow: 0 0 0 3px rgba(107, 142, 255, .22) !important;
+    border-color: rgba(0,47,101,.6);
+    box-shadow: 0 0 0 3px rgba(0,47,101,.2) !important;
   }
 }
 .form-control { box-shadow: none !important; }
@@ -285,21 +285,21 @@ header[name="menu-bar"] .badge.badge-danger {
 // ===================================================================
 .form-control.is-invalid,
 .custom-select.is-invalid {
-  border-color: #dc3545 !important;
+  border-color: #dc2626 !important;
   background-image: none;
-  &:focus { box-shadow: 0 0 0 3px rgba(220,53,69,.2) !important; }
+  &:focus { box-shadow: 0 0 0 3px rgba(220,38,38,.2) !important; }
 }
 .form-control.is-valid,
 .custom-select.is-valid {
-  border-color: #198754 !important;
+  border-color: #15803d !important;
   background-image: none;
-  &:focus { box-shadow: 0 0 0 3px rgba(25,135,84,.2) !important; }
+  &:focus { box-shadow: 0 0 0 3px rgba(21,128,61,.2) !important; }
 }
 .invalid-feedback {
   display: flex !important;
   align-items: center;
   gap: .3rem;
-  color: #b91c1c;
+  color: #dc2626;
   font-size: .8125rem;
   font-weight: 500;
   margin-top: .3rem;
@@ -311,7 +311,7 @@ header[name="menu-bar"] .badge.badge-danger {
     flex-shrink: 0;
     width: 1rem;
     height: 1rem;
-    background: #dc3545;
+    background: #dc2626;
     color: #fff;
     border-radius: 50%;
     font-size: .625rem;

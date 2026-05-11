@@ -18,6 +18,11 @@
     --cis-text-muted: #64748b;
     --cis-success:    #15803d;
     --cis-danger:     #dc2626;
+    --cis-info:       #0369a1;
+    --cis-warning:    #d97706;
+    --cis-text-secondary: #475569;
+    --cis-hover:      #eef2f7;
+    --cis-focus:      rgba(0,47,101,.25);
     --cis-font:       'Inter', 'BC Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --cis-radius:     0.5rem;
     --cis-radius-lg:  0.75rem;
