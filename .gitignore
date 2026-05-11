@@ -74,3 +74,6 @@ easyappointments/storage/sessions/*
 easyappointments/storage/uploads/*
 easyappointments/docker/mysql/
 
+
+# Scanner-generated punch lists (regenerable via `npm run scan:mobile`)
+web/scripts/mobile-scan.report.json

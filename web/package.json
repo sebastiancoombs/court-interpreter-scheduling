@@ -8,7 +8,8 @@
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "cypress:open": "cd tests && cypress open",
-    "test": "jest"
+    "test": "jest",
+    "scan:mobile": "node scripts/mobile-scan.mjs"
   },
   "resolutions": {
     "normalize-url": "^4.5.1",
