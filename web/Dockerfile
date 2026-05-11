@@ -28,6 +28,14 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # its baked-in `/docker-entrypoint.d/20-envsubst-on-templates.sh`, outputs
 # to /etc/nginx/conf.d/. Suffix must be `.template`, not `.tmpl`.
 COPY default.conf.template /etc/nginx/templates/default.conf.template
-ENV PORT=8080
+
+# `NGINX_ENVSUBST_FILTER=PORT` restricts envsubst to ONLY substitute
+# `${PORT}` — without this, the entrypoint also replaces nginx's
+# built-in variables (`$uri`, `$args`, `$is_args`, etc.) with empty
+# strings, silently corrupting the rendered config so nginx never
+# binds. The 404 "Application not found" page on Railway's edge is
+# what you get when the container starts but the port stays closed.
+ENV NGINX_ENVSUBST_FILTER=PORT \
+    PORT=8080
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
