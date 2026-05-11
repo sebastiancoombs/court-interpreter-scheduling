@@ -12,6 +12,11 @@ $bcgov-font-path: "../../node_modules/@bcgov/bootstrap-theme/dist/fonts/";
 @import "_custom_vuetify.scss";
 @import "_modern.scss";
 
+// Loaded last so its media queries override anything earlier in the cascade.
+// Single-source mobile-friendliness fixes — pairs with `npm run scan:mobile`.
+// Each rule collapses one pattern from the punch list; see the file for which.
+@import "_mobile-fixes.scss";
+
 .breadcrumb {
   margin-bottom: 0;
 }

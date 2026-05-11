@@ -1,0 +1,135 @@
+// =============================================================================
+// Global mobile-friendliness overrides
+// =============================================================================
+// Single-source fix-sheet that propagates phone-friendly behavior across
+// every component without per-file edits. Pairs with `npm run scan:mobile` —
+// each rule below collapses one pattern from the punch list.
+//
+// Strategy: target the Bootstrap / Bootstrap-Vue class hierarchy + the
+// browser-native elements so any component using them inherits the fix.
+// Some `!important` is unavoidable because Bootstrap's utility classes
+// and bootstrap-vue's inline styles outrank cascading rules otherwise.
+//
+// Breakpoints match Bootstrap 4 defaults (and bootstrap-vue's `xs/sm/md/lg/xl`).
+
+$cis-bp-sm: 576px;
+$cis-bp-md: 768px;
+$cis-bp-lg: 992px;
+
+// -----------------------------------------------------------------------------
+// 1. No element exceeds the viewport width.
+//    Source patterns covered: `fixed-width-px-large`, `fixed-width-px-small`,
+//    `inline-style-px-dimension` (for width).
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  *,
+  *::before,
+  *::after {
+    max-width: 100vw;
+  }
+
+  // Catch inline-style px widths on the most-leaked offenders.
+  // (Inline styles win over class rules, but we can still cap them.)
+  [style*="width"][style*="px"] {
+    max-width: 100% !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. Tables get a horizontal scrollbar instead of pushing the page wider.
+//    Source patterns covered: `btable-no-responsive` — any <b-table> that
+//    forgot the `responsive` prop now behaves the same as one that has it.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  .table-responsive,
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+  // The table itself stays a table internally so cell layout is preserved.
+  table > thead,
+  table > tbody,
+  table > tfoot {
+    display: table-row-group;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. Grid columns collapse to full-width below `sm` — equivalent to adding
+//    `cols="12"` to every <b-col>. Source pattern covered: `bcol-no-breakpoint`.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-sm - 0.02px) {
+  [class*="col-"],
+  .col {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. Flex containers wrap on phones so children stack instead of overflowing.
+//    Source pattern covered: `broken-flex-no-wrap`.
+//    Excludes `.flex-nowrap` so explicit horizontal scrollers stay intact.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  .d-flex:not(.flex-nowrap),
+  .row,
+  .navbar-nav,
+  .nav-tabs {
+    flex-wrap: wrap;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. Form controls hit the 44px iOS tap-target floor on phones.
+//    Source pattern covered: `tap-target-small`.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  button,
+  .btn,
+  a.nav-link {
+    min-height: 44px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. Topbar / app shell — let the unified topbar wrap its tabs on phones
+//    instead of overflowing the right edge.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  .cis-topbar__brand-row,
+  .cis-subnav {
+    flex-wrap: wrap;
+  }
+  .cis-subnav .cis-tab {
+    flex: 0 0 auto;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 7. Modals fit the viewport. b-modal / bootstrap modal-dialog get full
+//    width on phones; the modal-content fills.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 8. Sidebars / drawers collapse to overlay instead of pushing content.
+//    Targets the .sidebar / .b-sidebar pattern bcgov uses.
+// -----------------------------------------------------------------------------
+@media (max-width: $cis-bp-md) {
+  .b-sidebar,
+  .sidebar {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
