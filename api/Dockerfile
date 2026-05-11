@@ -28,8 +28,10 @@ COPY . .
 
 EXPOSE 8080
 
-# alembic upgrade head on start so the schema's always at the latest
-# revision before uvicorn starts serving. Falls through cleanly on
-# fresh databases (creates the alembic_version table) and is a no-op
-# on already-migrated ones.
-CMD sh -c "alembic upgrade head && exec uvicorn app:app --host 0.0.0.0 --port ${PORT}"
+# Schema is owned by Supabase migrations (supabase/migrations/) — apply
+# them via `supabase db push` BEFORE this container starts. We do not
+# run alembic at runtime; bcgov's migration chain depends on PII seed
+# files that aren't in source control and has known NULL-handling bugs.
+# Regenerate the Supabase snapshot via `bash api/scripts/dump_schema.sh`
+# after upstream model changes.
+CMD ["sh", "-c", "exec uvicorn app:app --host 0.0.0.0 --port ${PORT}"]
