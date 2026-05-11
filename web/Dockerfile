@@ -24,10 +24,9 @@ RUN npm run build || npm run build -- --skip-plugins lint
 
 FROM nginx:1.27-alpine AS runtime
 COPY --from=build /app/dist /usr/share/nginx/html
-# Static config, no template. Drops nginx-alpine's envsubst entrypoint
-# pass entirely (it was corrupting nginx's native $-variables and
-# silently breaking the rendered config). nginx listens on 80; Railway
-# detects the open TCP port and routes external traffic to it.
-COPY default.conf /etc/nginx/conf.d/default.conf
+# Ship the config as a template; the CMD fills in __RESOLVER__ at
+# runtime from /etc/resolv.conf. We use sed (not envsubst) so nginx's
+# own $-variables ($uri, $host, etc.) are never touched.
+COPY default.conf /etc/nginx/conf.d/default.conf.tpl
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf); sed \"s/__RESOLVER__/$RESOLVER/g\" /etc/nginx/conf.d/default.conf.tpl > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"]
