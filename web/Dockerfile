@@ -5,6 +5,10 @@
 
 FROM node:18-bookworm AS build
 WORKDIR /app
+# OpenSSL 3.0 (Node 17+) breaks the old webpack 4 + terser bundle
+# bcgov ships. `--openssl-legacy-provider` restores the v1.1 algorithms
+# the bundler still calls into.
+ENV NODE_OPTIONS=--openssl-legacy-provider
 COPY package*.json ./
 # `--legacy-peer-deps` because the bcgov package.json predates npm's
 # stricter peer-dep resolver. Fallback to `npm install` if `npm ci` errors
