@@ -54,21 +54,40 @@ docker run --rm --network host \
   "$IMAGE" alembic upgrade head
 
 TS=$(date -u +%Y%m%d%H%M%S)
-OUT="supabase/migrations/${TS}_bcgov_schema.sql"
+SCHEMA_OUT="supabase/migrations/${TS}_bcgov_schema.sql"
+SEED_OUT="supabase/migrations/$((TS + 1))_bcgov_seed_data.sql"
 mkdir -p supabase/migrations
 
-# Drop any earlier bcgov_schema dump so only the latest is in supabase migrations.
-rm -f supabase/migrations/*_bcgov_schema.sql
+# Drop any earlier bcgov dumps so only the latest pair lives in supabase migrations.
+rm -f supabase/migrations/*_bcgov_schema.sql supabase/migrations/*_bcgov_seed_data.sql
 
+# Schema dump — pure DDL.
 {
   echo "-- bcgov schema, captured from \`alembic upgrade head\` against PostgreSQL 15."
   echo "-- Re-generate via \`bash api/scripts/dump_schema.sh\` after model changes."
   echo ""
   docker exec "$CONTAINER" pg_dump --schema-only --no-owner --no-acl --no-comments -U postgres cisdb \
     | grep -v '^\\restrict' | grep -v '^\\unrestrict'
-} > "$OUT"
+} > "$SCHEMA_OUT"
 
-echo "✓ wrote $OUT"
-echo "  tables: $(grep -c '^CREATE TABLE' "$OUT")"
-echo "  indexes: $(grep -cE '^CREATE (UNIQUE )?INDEX' "$OUT")"
-echo "  types: $(grep -c '^CREATE TYPE' "$OUT")"
+# Seed-data dump — only the tables bcgov's alembic chain bulk_insert'd into.
+# Skipping `interpreter`, `language`, `interpreter_language` since those come
+# from the gitignored .xlsx PII seeds we don't ship.
+{
+  echo "-- bcgov seed data — equivalent to what bcgov alembic op.bulk_insert"
+  echo "-- did during upgrade. Companion to the bcgov_schema.sql dump."
+  echo "-- Re-generate via \`bash api/scripts/dump_schema.sh\`."
+  echo ""
+  docker exec "$CONTAINER" pg_dump --data-only --no-owner --no-acl --no-comments \
+    --inserts --on-conflict-do-nothing \
+    --table=geo_status --table=role --table=rate \
+    -U postgres cisdb \
+    | grep -v '^\\restrict' | grep -v '^\\unrestrict'
+} > "$SEED_OUT"
+
+echo "✓ wrote $SCHEMA_OUT"
+echo "  tables: $(grep -c '^CREATE TABLE' "$SCHEMA_OUT")"
+echo "  indexes: $(grep -cE '^CREATE (UNIQUE )?INDEX' "$SCHEMA_OUT")"
+echo "  types: $(grep -c '^CREATE TYPE' "$SCHEMA_OUT")"
+echo "✓ wrote $SEED_OUT"
+echo "  inserts: $(grep -c '^INSERT' "$SEED_OUT")"
