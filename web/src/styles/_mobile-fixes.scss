@@ -98,16 +98,23 @@ $cis-bp-lg: 992px;
 }
 
 // -----------------------------------------------------------------------------
-// 6. Topbar / app shell — let the unified topbar wrap its tabs on phones
-//    instead of overflowing the right edge.
+// 6. Topbar / app shell — brand row wraps on phones; subnav SCROLLS
+//    horizontally (overflow-x: auto + scrollbar hidden in topbar.css) so all
+//    9 tabs stay reachable with a swipe instead of wrapping into a pile.
 // -----------------------------------------------------------------------------
 @media (max-width: $cis-bp-md) {
-  .cis-topbar__brand-row,
-  .cis-subnav {
+  .cis-topbar__brand-row {
     flex-wrap: wrap;
+  }
+  // Subnav: keep nowrap so tabs don't stack; ensure the swipe area is big enough.
+  .cis-subnav {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
   .cis-subnav .cis-tab {
     flex: 0 0 auto;
+    min-height: 40px; // slightly below 44px — tabs are dense by design
   }
 }
 

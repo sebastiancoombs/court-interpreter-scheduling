@@ -382,3 +382,34 @@ header[name="menu-bar"] .badge.badge-danger {
   }
   .btn { margin-top: 1.25rem; }
 }
+
+// ===================================================================
+// Mobile polish
+// ===================================================================
+@media (max-width: 768px) {
+  // Tighter content padding so cards don't hug the edges
+  .app-main { padding: 0 0.75rem 4rem !important; }
+
+  // Cards: full-width, reduced inner padding on phones
+  .card { border-radius: 0.5rem; }
+  .card-body { padding: 1rem; }
+  .card-header { padding: 0.75rem 1rem; }
+
+  // Section titles scale down
+  .section-title { font-size: 1.25rem; }
+
+  // Skeleton cards get full-width treatment
+  .cis-skeleton-card { padding: 1rem; }
+
+  // Court-select in topbar: cap width so it doesn't overflow the brand row
+  // on a 375px phone with a long court name.
+  .cis-court-select { max-width: min(200px, 45vw); }
+
+  // User pill loses the name on very small screens (initials still show)
+  @media (max-width: 400px) {
+    .cis-user-pill__name { display: none; }
+  }
+
+  // Badge in subnav floats inline with the last tab on scroll
+  .cis-tab__badge { margin-left: .5rem; }
+}

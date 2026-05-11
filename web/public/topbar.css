@@ -179,6 +179,14 @@
 @media (max-width: 640px) {
     .cis-topbar__brand-row { padding: .5rem 1rem; }
     .cis-brand__pre { display: none; }
+    .cis-brand__name { font-size: .9rem; }
     .cis-subnav { padding: 0 .5rem; }
     .cis-tab { padding: .5rem .6rem; font-size: .8rem; }
+}
+
+/* 375px phone — very tight */
+@media (max-width: 400px) {
+    .cis-brand__name { font-size: .825rem; }
+    .cis-user-pill__name { display: none; }
+    .cis-court-select { max-width: 45vw; }
 }
