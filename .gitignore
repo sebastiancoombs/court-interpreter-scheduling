@@ -4,7 +4,11 @@ env/
 .env.*
 dist/
 /*.env.*
-api/alembic/seeds
+# bcgov originally gitignored the seed Excel files (production loaded
+# them from a separate artifact). For Railway-only deploys we ship
+# stub seeds with header rows + zero data — the migrations loop over
+# zero rows and proceed without inserting interpreter PII.
+# api/alembic/seeds
 
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 *_DeploymentConfig.json
