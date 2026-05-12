@@ -59,24 +59,36 @@ class Sso extends EA_Controller
                     'create_datetime' => $now,
                     'update_datetime' => $now,
                 ]);
-                $user = $this->db->get_where('users', ['id' => $this->db->insert_id()])->row_array();
+                // insert_id() is unreliable on the Postgres driver — re-
+                // fetch by email so we get the actually-persisted row.
+                $user = $this->db->get_where('users', ['email' => $email])->row_array();
+                if (empty($user)) {
+                    throw new RuntimeException('User provision failed — row not visible after insert');
+                }
             }
 
             $role = $this->db->get_where('roles', ['id' => $user['id_roles']])->row_array();
 
             $this->session->sess_regenerate();
-            session([
+            $payload = [
                 'user_id' => (int) $user['id'],
                 'user_email' => $user['email'],
                 'username' => $user['email'],
                 'timezone' => !empty($user['timezone']) ? $user['timezone'] : 'UTC',
                 'language' => !empty($user['language']) ? $user['language'] : Config::LANGUAGE,
                 'role_slug' => $role['slug'] ?? 'admin',
-            ]);
+            ];
+            session($payload);
 
             json_response([
                 'success' => true,
                 'user_id' => (int) $user['id'],
+                'session' => [
+                    'user_id' => session('user_id'),
+                    'role_slug' => session('role_slug'),
+                    'username' => session('username'),
+                ],
+                'role_resolved' => $role,
                 'redirect' => site_url('calendar'),
             ]);
         } catch (Throwable $e) {
