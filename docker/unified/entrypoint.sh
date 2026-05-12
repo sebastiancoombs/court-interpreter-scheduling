@@ -40,12 +40,24 @@ chown -R www-data:www-data /var/www/html/ea/storage
 
 # php-fpm by default listens on 127.0.0.1:9000; we want a unix socket so
 # nginx's `fastcgi_pass unix:/run/php/php8.2-fpm.sock` works. Patch the
-# default pool config at startup so the image stays declarative.
+# default pool config at startup so the image stays declarative. Also
+# disable clear_env and explicitly forward the EA-relevant vars —
+# php-fpm strips its parent environment by default, which would leave
+# EA's config.php falling back to `DB_HOST=postgres` etc.
 PHP_POOL=/etc/php/8.2/fpm/pool.d/www.conf
 if [ -f "$PHP_POOL" ]; then
   sed -i 's|^listen = .*|listen = /run/php/php8.2-fpm.sock|' "$PHP_POOL"
   sed -i 's|^;listen.owner = .*|listen.owner = www-data|' "$PHP_POOL"
   sed -i 's|^;listen.group = .*|listen.group = www-data|' "$PHP_POOL"
+  sed -i 's|^;clear_env = .*|clear_env = no|' "$PHP_POOL"
+  {
+    echo ""
+    echo "; EA env passthrough appended by entrypoint.sh"
+    for v in BASE_URL DB_DRIVER DB_HOST DB_PORT DB_NAME DB_USERNAME DB_PASSWORD LANGUAGE DEBUG_MODE; do
+      val=$(printenv "$v" || true)
+      [ -n "$val" ] && printf 'env[%s] = "%s"\n' "$v" "$val"
+    done
+  } >> "$PHP_POOL"
 fi
 mkdir -p /run/php && chown www-data:www-data /run/php
 
