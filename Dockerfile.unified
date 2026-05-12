@@ -97,9 +97,14 @@ COPY --from=vue-build /build/dist/ /var/www/html/web/
 COPY --from=api-deps /opt/venv/ /opt/venv/
 COPY api/ /opt/api/
 
-# EA source + composer vendor → /var/www/html/ea
+# EA source + composer vendor → /var/www/html/ea. The local source
+# files happen to be mode 600 (macOS author's home defaults), so we
+# normalize permissions and ownership for the php-fpm runtime user.
 COPY easyappointments/ /var/www/html/ea/
 COPY --from=ea-vendor /build/vendor/ /var/www/html/ea/vendor/
+RUN chown -R www-data:www-data /var/www/html/ea \
+ && find /var/www/html/ea -type d -exec chmod 755 {} + \
+ && find /var/www/html/ea -type f -exec chmod 644 {} +
 
 # Integration services + node_modules
 COPY integration/ /opt/integration/
