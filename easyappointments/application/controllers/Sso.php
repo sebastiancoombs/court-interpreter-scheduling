@@ -88,6 +88,22 @@ class Sso extends EA_Controller
 
             $role = $admin_role;
 
+            // EA's Calendar controller calls users_model::get_settings()
+            // and asserts the return type is array — without a row in
+            // user_settings it 500s on TypeError. Seed one with placeholder
+            // credentials (SSO never authenticates against them).
+            $has_settings = $this->db
+                ->get_where('user_settings', ['id_users' => $user['id']])
+                ->num_rows();
+            if (!$has_settings) {
+                $this->db->insert('user_settings', [
+                    'id_users' => (int) $user['id'],
+                    'username' => $email,
+                    'salt' => bin2hex(random_bytes(16)),
+                    'password' => bin2hex(random_bytes(32)),
+                ]);
+            }
+
             $this->session->sess_regenerate();
             $payload = [
                 'user_id' => (int) $user['id'],
