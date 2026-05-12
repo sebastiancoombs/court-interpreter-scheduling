@@ -13,7 +13,9 @@
 /assets/js/**/*.min.js
 /assets/css/**/*.css
 /assets/vendor
-/config.php
+# config.php is intentionally tracked here — reads everything from env
+# vars, no secrets. Removing the ignore so Railway's `up` packager
+# (which respects .gitignore) actually uploads it.
 /storage/backups/*
 !/storage/backups/.htaccess
 !/storage/backups/index.html
