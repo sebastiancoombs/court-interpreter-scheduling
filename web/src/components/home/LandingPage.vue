@@ -115,20 +115,36 @@ const commonState = namespace("Common");
 export default class LandingPage extends Vue {
     @commonState.State public userId!: string;
     pageReady = false;
+    loginUrl = '/api/v1/login';
 
     async mounted() {
-        this.pageReady = false;
-        if (this.$store.state.Common.token)
-            await SessionManager.getUserInfo(this.$store);
-        if (this.userId) {
-            this.$router.push({ name: "bookings" });
-        } else {
-            this.pageReady = true;
+        // Show the page immediately — no blank-flash while checking auth.
+        this.pageReady = true;
+
+        try {
+            // /token returns { access_token, login_url, logout_url }.
+            // If a valid session already exists, skip straight to bookings.
+            const resp = await this.$http.get('/token');
+            if (resp.data.login_url) this.loginUrl = resp.data.login_url;
+
+            if (resp.data.access_token) {
+                this.$store.commit('Common/setToken', resp.data.access_token);
+                this.$store.commit('Common/setLogoutUrl', resp.data.logout_url);
+                const info = await SessionManager.getUserInfo(this.$store);
+                if (info?.userId) {
+                    this.$router.push({ name: 'bookings' });
+                }
+            }
+        } catch (_) {
+            // Network error or missing OIDC config — keep the page visible,
+            // login button falls back to the hardcoded /api/v1/login path.
         }
     }
 
     login() {
-        this.$router.push({ name: "bookings" });
+        // Hard-navigate into the OIDC flow — never use router.push here.
+        // router.push would hit authGuard, bounce back to /, and flash.
+        window.location.href = this.loginUrl;
     }
 }
 </script>
