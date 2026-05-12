@@ -101,9 +101,14 @@ COPY --from=integration-deps /build/node_modules/ /opt/integration/node_modules/
 COPY docker/unified/nginx.conf      /etc/nginx/nginx.conf.tmpl
 COPY docker/unified/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/unified/entrypoint.sh    /usr/local/bin/entrypoint.sh
+# The venv's python symlink targets the builder image's path
+# (/usr/local/bin/python3.11), which doesn't exist in the Debian runtime
+# (apt installs to /usr/bin/python3.11). Replace with a direct symlink so
+# the shebang in the venv's scripts resolves correctly.
 RUN chmod +x /usr/local/bin/entrypoint.sh \
- && ln -sf /opt/venv/bin/python /usr/local/bin/python \
- && ln -sf /opt/venv/bin/uvicorn /usr/local/bin/uvicorn
+ && ln -sf /usr/bin/python3.11 /opt/venv/bin/python3.11 \
+ && ln -sf /usr/bin/python3.11 /opt/venv/bin/python3 \
+ && ln -sf /usr/bin/python3.11 /opt/venv/bin/python
 
 EXPOSE 8000
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
