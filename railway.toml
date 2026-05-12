@@ -1,0 +1,4 @@
+[deploy]
+dockerfilePath = "Dockerfile.unified"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
