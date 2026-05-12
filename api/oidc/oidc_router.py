@@ -29,7 +29,18 @@ realm = settings.OIDC_RP_PROVIDER_REALM
 client_id = settings.OIDC_RP_CLIENT_ID
 client_secret = settings.OIDC_RP_CLIENT_SECRET
 
-oidc = OpenIDConnect(hint, host, realm, client_id, client_secret)
+# OpenIDConnect.__init__ fetches /.well-known/openid-configuration over
+# the network at import time. On Railway demo deployments there is no
+# Keycloak realm to hit, so the request 502s and crashes uvicorn before
+# the Supabase login route can serve anything. Defer the failure to the
+# OIDC routes that actually need it.
+try:
+    oidc = OpenIDConnect(hint, host, realm, client_id, client_secret)
+except Exception as _oidc_init_err:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "OIDC init failed (%s); /token/keycloak routes will 503 until reachable", _oidc_init_err)
+    oidc = None
 
 import logging
 logger = logging.getLogger(__name__)
