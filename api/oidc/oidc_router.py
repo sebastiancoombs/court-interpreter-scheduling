@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Request, Response, HTTPException, status
 from core.multi_database_middleware import get_db_session
 from sqlalchemy.orm import Session
 
@@ -71,7 +71,7 @@ class _SupabaseCreds(BaseModel):
 
 
 @router.post('/login/supabase')
-def supabase_login(creds: _SupabaseCreds, request: Request, db: Session = Depends(get_db_session)):
+def supabase_login(creds: _SupabaseCreds, request: Request, response: Response, db: Session = Depends(get_db_session)):
     if not _SUPABASE_URL or not _SUPABASE_ANON_KEY:
         raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Supabase auth not configured")
 
@@ -141,6 +141,30 @@ def supabase_login(creds: _SupabaseCreds, request: Request, db: Session = Depend
         expires_at = datetime.utcfromtimestamp(exp_ts).isoformat() if exp_ts else None
     except Exception:
         expires_at = None
+
+    # SSO bridge: log this user into EA (PHP) by calling /sso/ea_login on
+    # the local nginx and forwarding EA's Set-Cookie headers back to the
+    # browser. Same origin, so the browser ends up with both the bcgov
+    # bearer (in Authorization) and the EA ea_session cookie. Failures
+    # are non-fatal — Supabase login still succeeds, just no EA SSO.
+    try:
+        ea_resp = http_requests.post(
+            "http://127.0.0.1/sso/ea_login",
+            data={"token": access_token},
+            timeout=5,
+            allow_redirects=False,
+        )
+        # urllib3 keeps multi-value headers in HTTPHeaderDict.getlist();
+        # requests' top-level .headers folds them with ", " which would
+        # mangle Set-Cookie's Expires= comma. Use the raw urllib3 view.
+        cookies_out = []
+        if hasattr(ea_resp.raw, "headers") and hasattr(ea_resp.raw.headers, "getlist"):
+            cookies_out = ea_resp.raw.headers.getlist("Set-Cookie")
+        for cookie_header in cookies_out:
+            response.headers.append("Set-Cookie", cookie_header)
+    except Exception as _ea_sso_err:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("EA SSO bridge failed: %s", _ea_sso_err)
 
     return {
         "access_token": access_token,
