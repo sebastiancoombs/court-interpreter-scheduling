@@ -50,16 +50,23 @@ class Sso extends EA_Controller
             }
 
             $user = $this->db->get_where('users', ['email' => $email])->row_array();
-            $now = date('Y-m-d H:i:s');
+            // The bcgov fork's ea_users table doesn't have a
+            // create_datetime/update_datetime column, so build the insert
+            // payload defensively against either schema.
+            $base_payload = [
+                'first_name' => 'SSO',
+                'last_name' => $email,
+                'email' => $email,
+                'id_roles' => $admin_role['id'],
+            ];
+            if ($this->db->field_exists('create_datetime', 'users')) {
+                $base_payload['create_datetime'] = date('Y-m-d H:i:s');
+            }
+            if ($this->db->field_exists('update_datetime', 'users')) {
+                $base_payload['update_datetime'] = date('Y-m-d H:i:s');
+            }
             if (empty($user)) {
-                $this->db->insert('users', [
-                    'first_name' => 'SSO',
-                    'last_name' => $email,
-                    'email' => $email,
-                    'id_roles' => $admin_role['id'],
-                    'create_datetime' => $now,
-                    'update_datetime' => $now,
-                ]);
+                $this->db->insert('users', $base_payload);
                 // insert_id() is unreliable on the Postgres driver — re-
                 // fetch by email so we get the actually-persisted row.
                 $user = $this->db->get_where('users', ['email' => $email])->row_array();
@@ -71,10 +78,11 @@ class Sso extends EA_Controller
                 // rows seeded by the booking flow). Authoritative source
                 // for SSO users is the Supabase login, so normalize them
                 // to admin on every sign-in.
-                $this->db->update('users', [
-                    'id_roles' => $admin_role['id'],
-                    'update_datetime' => $now,
-                ], ['id' => $user['id']]);
+                $update_payload = ['id_roles' => $admin_role['id']];
+                if ($this->db->field_exists('update_datetime', 'users')) {
+                    $update_payload['update_datetime'] = date('Y-m-d H:i:s');
+                }
+                $this->db->update('users', $update_payload, ['id' => $user['id']]);
                 $user['id_roles'] = $admin_role['id'];
             }
 
