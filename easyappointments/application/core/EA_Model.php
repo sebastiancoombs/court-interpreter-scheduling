@@ -221,6 +221,12 @@ class EA_Model extends CI_Model
      */
     function quote_order_by(string $order_by): string
     {
+        // MySQL/MariaDB use backticks for identifiers; Postgres uses
+        // double quotes. Pick the right one from the active CI driver
+        // so this method works on both backends.
+        $driver = strtolower($this->db->dbdriver ?? 'mysqli');
+        $q = ($driver === 'postgre' || $driver === 'pgsql') ? '"' : '`';
+
         $parts = explode(',', $order_by);
         $quoted_parts = [];
 
@@ -229,8 +235,7 @@ class EA_Model extends CI_Model
             $column = array_shift($tokens); // first token is column
             $direction = strtoupper($tokens[0] ?? ''); // optional ASC/DESC
 
-            // Add backticks (or quotes) around column name
-            $column = '`' . str_replace('`', '', $column) . '`';
+            $column = $q . str_replace([$q, '`', '"'], '', $column) . $q;
 
             if ($direction === 'ASC' || $direction === 'DESC') {
                 $quoted_parts[] = $column . ' ' . $direction;
