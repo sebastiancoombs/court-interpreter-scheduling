@@ -71,15 +71,22 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/opt/venv/bin:/usr/local/bin:/usr/bin:/bin"
 
 # nginx, php-fpm, python runtime, node, supervisor, gettext (for envsubst
-# at startup so the nginx.conf can templatize service ports).
+# at startup so the nginx.conf can templatize service ports). Debian
+# bookworm ships Node 18, but @supabase/realtime-js requires global
+# WebSocket (Node 20+); install Node 20 from NodeSource instead.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates curl gettext-base supervisor \
+        ca-certificates curl gnupg gettext-base supervisor \
         nginx \
         php8.2-fpm php8.2-cli php8.2-mbstring php8.2-xml php8.2-curl \
         php8.2-pgsql php8.2-zip php8.2-intl php8.2-gd \
         python3.11 python3.11-venv libpq5 \
-        nodejs npm \
-    && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/* \
+ && mkdir -p /etc/apt/keyrings \
+ && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+        | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+ && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
+        > /etc/apt/sources.list.d/nodesource.list \
+ && apt-get update && apt-get install -y --no-install-recommends nodejs \
+ && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/* \
     && mkdir -p /run/nginx /run/php /var/log/cis
 
 # Vue build → /var/www/html/web
