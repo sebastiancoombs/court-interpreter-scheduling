@@ -13,6 +13,12 @@
 # -------------------------------------------------------------------------
 FROM node:18-bookworm AS vue-build
 WORKDIR /build
+# OpenSSL 3.0 (Node 17+) breaks the old webpack 4 + terser bundle bcgov
+# ships. `--openssl-legacy-provider` restores the v1.1 algorithms the
+# bundler still calls into.
+ENV NODE_OPTIONS=--openssl-legacy-provider \
+    VUE_APP_RUN_IN_DOCKER=true \
+    WEB_BASE_HREF=/
 COPY web/package*.json ./
 RUN npm ci --legacy-peer-deps
 COPY web/ ./
