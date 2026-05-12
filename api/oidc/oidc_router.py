@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from core.multi_database_middleware import get_db_session
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,9 @@ import base64
 import hashlib
 import jwt
 from datetime import datetime
+import os
+import requests as http_requests
+from pydantic import BaseModel
 
 from models.user_model import UserModel
 from models.oidc_model import OidcUserModel
@@ -45,6 +48,96 @@ router = APIRouter(
     prefix="/api/v1",
     tags=['Oidc']
 )
+
+
+_SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").rstrip("/")
+_SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") or ""
+
+
+class _SupabaseCreds(BaseModel):
+    email: str
+    password: str
+
+
+@router.post('/login/supabase')
+def supabase_login(creds: _SupabaseCreds, request: Request, db: Session = Depends(get_db_session)):
+    if not _SUPABASE_URL or not _SUPABASE_ANON_KEY:
+        raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "Supabase auth not configured")
+
+    # Exchange email+password for a Supabase JWT
+    sb_resp = http_requests.post(
+        f"{_SUPABASE_URL}/auth/v1/token",
+        params={"grant_type": "password"},
+        headers={"apikey": _SUPABASE_ANON_KEY, "Content-Type": "application/json"},
+        json={"email": creds.email, "password": creds.password},
+        timeout=10,
+    )
+    if sb_resp.status_code != 200:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
+
+    sb_data = sb_resp.json()
+    supabase_token = sb_data.get("access_token")
+
+    from core.supabase_auth import verify_supabase_jwt
+    user_info = verify_supabase_jwt(supabase_token)
+    if not user_info:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token verification failed")
+
+    # Look up or create the local bcgov user record by email
+    email = user_info["email"]
+    user = db.query(UserModel).filter(UserModel.email == email).first()
+    if not user:
+        user = UserModel(
+            username=email,
+            email=email,
+            display_name=user_info.get("display_name") or email.split("@")[0],
+            first_name=user_info.get("first_name") or "",
+            last_name=user_info.get("last_name") or "",
+            authorization_id=user_info["user_id"],
+            last_login=datetime.now(),
+            date_joined=datetime.now(),
+            is_staff=False,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        db.query(UserModel).filter(UserModel.id == user.id).update({"last_login": datetime.now()})
+        db.commit()
+
+    # Sync roles from Supabase app_metadata → bcgov role table
+    supabase_roles = user_info.get("roles") or []
+    if supabase_roles:
+        from models.role_model import RoleModel, UserRoleModel
+        existing_role_ids = {ur.role_id for ur in db.query(UserRoleModel).filter(UserRoleModel.user_id == user.id).all()}
+        for role_name in supabase_roles:
+            role = db.query(RoleModel).filter(RoleModel.role_name == role_name).first()
+            if role and role.id not in existing_role_ids:
+                db.add(UserRoleModel(user_id=user.id, role_id=role.id, updated_by="supabase"))
+        db.commit()
+
+    # Store email in session so verify_token works on subsequent calls
+    request.session["oidc_user_email"] = email
+
+    access_token = JWTtoken.create_access_token(data={
+        "sub": email,
+        "username": user.username,
+    })
+
+    try:
+        decoded = jwt.decode(access_token, options={"verify_signature": False})
+        exp_ts = decoded.get("exp")
+        expires_at = datetime.utcfromtimestamp(exp_ts).isoformat() if exp_ts else None
+    except Exception:
+        expires_at = None
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "login_url": None,
+        "logout_url": getLogoutUrl(request),
+        "expires_at": expires_at,
+    }
 
 
 def logout_request(callback_uri, id_token=None):
@@ -179,7 +272,8 @@ def token_user(request: Request, db: Session = Depends(get_db_session)):
         "token_type": "bearer",
         "login_url": getLoginUrl(request),
         "logout_url": getLogoutUrl(request),
-        "expires_at": None  # Add expires_at to the response
+        "expires_at": None,
+        "supabase_enabled": bool(_SUPABASE_URL and _SUPABASE_ANON_KEY),
     }
     
     if("oidc_refresh_token" in request.session and request.session["oidc_refresh_token"] is not None):
@@ -221,7 +315,8 @@ def token_user(request: Request, db: Session = Depends(get_db_session)):
             "token_type": "bearer",
             "login_url": None,
             "logout_url": getLogoutUrl(request),
-            "expires_at": expires_at  # Include the expiration time as ISO 8601
+            "expires_at": expires_at,
+            "supabase_enabled": bool(_SUPABASE_URL and _SUPABASE_ANON_KEY),
         }
     else:
         return login_response

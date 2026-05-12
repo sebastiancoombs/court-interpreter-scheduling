@@ -31,7 +31,48 @@
                     across California's superior courts.
                 </p>
 
-                <button class="cis-hero__cta" @click="login">
+                <!-- ── Login form (Supabase) or OIDC button ── -->
+                <div v-if="useSupabase" class="cis-login-box">
+                    <form @submit.prevent="supabaseLogin" novalidate>
+                        <div class="cis-field">
+                            <label for="cis-email">Email</label>
+                            <input
+                                id="cis-email"
+                                v-model="email"
+                                type="email"
+                                autocomplete="email"
+                                placeholder="you@example.com"
+                                required
+                                :disabled="loading"
+                            />
+                        </div>
+                        <div class="cis-field">
+                            <label for="cis-password">Password</label>
+                            <input
+                                id="cis-password"
+                                v-model="password"
+                                type="password"
+                                autocomplete="current-password"
+                                placeholder="••••••••"
+                                required
+                                :disabled="loading"
+                            />
+                        </div>
+                        <p v-if="loginError" class="cis-login-error" role="alert">{{ loginError }}</p>
+                        <button type="submit" class="cis-hero__cta" :disabled="loading" style="width:100%;justify-content:center;">
+                            <span v-if="!loading">
+                                Sign In
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2"
+                                          stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </span>
+                            <span v-else>Signing in…</span>
+                        </button>
+                    </form>
+                </div>
+
+                <button v-else class="cis-hero__cta" @click="login">
                     Sign In to the Portal
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                         <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2"
@@ -117,15 +158,24 @@ export default class LandingPage extends Vue {
     pageReady = false;
     loginUrl = '/api/v1/login';
 
+    // Supabase form state
+    useSupabase = false;
+    email = '';
+    password = '';
+    loading = false;
+    loginError = '';
+
     async mounted() {
-        // Show the page immediately — no blank-flash while checking auth.
         this.pageReady = true;
 
         try {
-            // /token returns { access_token, login_url, logout_url }.
-            // If a valid session already exists, skip straight to bookings.
             const resp = await this.$http.get('/token');
             if (resp.data.login_url) this.loginUrl = resp.data.login_url;
+
+            // API signals Supabase is configured — use email/password form
+            if (resp.data.supabase_enabled) {
+                this.useSupabase = true;
+            }
 
             if (resp.data.access_token) {
                 this.$store.commit('Common/setToken', resp.data.access_token);
@@ -136,15 +186,36 @@ export default class LandingPage extends Vue {
                 }
             }
         } catch (_) {
-            // Network error or missing OIDC config — keep the page visible,
-            // login button falls back to the hardcoded /api/v1/login path.
+            // Network error — keep OIDC button visible; Supabase flag comes from API
         }
     }
 
     login() {
-        // Hard-navigate into the OIDC flow — never use router.push here.
-        // router.push would hit authGuard, bounce back to /, and flash.
         window.location.href = this.loginUrl;
+    }
+
+    async supabaseLogin() {
+        this.loginError = '';
+        this.loading = true;
+        try {
+            const resp = await this.$http.post('/login/supabase', {
+                email: this.email,
+                password: this.password,
+            });
+            this.$store.commit('Common/setToken', resp.data.access_token);
+            this.$store.commit('Common/setLogoutUrl', resp.data.logout_url);
+            const info = await SessionManager.getUserInfo(this.$store);
+            if (info?.userId) {
+                this.$router.push({ name: 'bookings' });
+            } else {
+                this.loginError = 'Login succeeded but your account has no access. Contact an administrator.';
+            }
+        } catch (err: any) {
+            const msg = err?.response?.data?.detail || 'Invalid email or password.';
+            this.loginError = typeof msg === 'string' ? msg : JSON.stringify(msg);
+        } finally {
+            this.loading = false;
+        }
     }
 }
 </script>
@@ -230,9 +301,60 @@ export default class LandingPage extends Vue {
   transition: background-color .15s, transform .15s, box-shadow .15s;
   box-shadow: 0 4px 20px rgba(193,154,54,.4);
 
-  &:hover { background: #a8852f; transform: translateY(-2px); box-shadow: 0 6px 28px rgba(193,154,54,.5); }
-  &:active { transform: translateY(0); }
+  &:hover:not(:disabled) { background: #a8852f; transform: translateY(-2px); box-shadow: 0 6px 28px rgba(193,154,54,.5); }
+  &:active:not(:disabled) { transform: translateY(0); }
   &:focus-visible { outline: 3px solid rgba(193,154,54,.6); outline-offset: 3px; }
+  &:disabled { opacity: .65; cursor: not-allowed; }
+}
+
+// ── Login box ─────────────────────────────────────────────────
+.cis-login-box {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: left;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.cis-field {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: .8125rem;
+    font-weight: 600;
+    color: rgba(255,255,255,.75);
+    letter-spacing: .04em;
+  }
+
+  input {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: .5rem;
+    color: #fff;
+    font-size: .9375rem;
+    padding: .6rem .875rem;
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    width: 100%;
+
+    &::placeholder { color: rgba(255,255,255,.35); }
+    &:focus { border-color: #C19A36; box-shadow: 0 0 0 3px rgba(193,154,54,.25); }
+    &:disabled { opacity: .5; cursor: not-allowed; }
+  }
+}
+
+.cis-login-error {
+  font-size: .8125rem;
+  color: #fca5a5;
+  margin: 0 0 .875rem;
+  line-height: 1.4;
 }
 
 // ── Feature cards ─────────────────────────────────────────────
