@@ -67,4 +67,13 @@ if [ -z "${BASE_URL:-}" ] && [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
   export BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}"
 fi
 
+# Run EA database migrations so columns like update_datetime/create_datetime
+# are present on every deploy, regardless of whether the initial install
+# seeded them correctly.
+if [ -f /var/www/html/ea/index.php ]; then
+  echo "Running EA migrations..."
+  cd /var/www/html/ea && php index.php console migrate 2>&1 || echo "EA migrate returned non-zero (may be harmless on first install)"
+  cd /
+fi
+
 exec "$@"
