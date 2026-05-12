@@ -45,22 +45,10 @@ const router = new VueRouter({
     }
 });
 
-// Redirect to /court-interpreter-scheduling/
-if(  
-    location.pathname.includes('/bookings') ||
-    location.pathname.includes('/create') ||
-    location.pathname.includes('/directory') ||
-    location.pathname.includes('/language') ||
-    location.pathname.includes('/user-role') ||
-    location.pathname.includes('/rates') ||
-    location.pathname.includes('/update-geo') ||
-    location.pathname.includes('/audit-booking')
-){
-    console.log(location.pathname)
-    history.pushState({page: "bookings"}, "", process.env.BASE_URL+"bookings")
-}
-else if(!location.pathname.includes('/signout'))
-    history.pushState({page: "home"}, "", process.env.BASE_URL)
+// Nginx serves index.html for all routes (try_files SPA config), so
+// Vue Router receives the real pathname and routes correctly.
+// No pushState rewriting needed — the old redirect block was clobbering
+// every tab navigation by overwriting the path to /bookings.
 
 
 new Vue({
