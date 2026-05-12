@@ -1,7 +1,7 @@
-# Two-stage build: compile the Vue 2 SPA, then serve the static dist
-# with nginx. Railway sets $PORT at runtime; entrypoint substitutes it
-# into the nginx site config so the container binds the platform-assigned
-# port without a rebuild.
+# LOCAL DEV ONLY — standalone Vue + nginx for frontend-only iteration.
+# Production / Railway uses Dockerfile.unified at the repo root, which
+# bundles Vue + FastAPI + EA in a single container. Do NOT use this file
+# as a Railway build target; it will drift from the unified stack.
 
 FROM node:18-bookworm AS build
 WORKDIR /app
