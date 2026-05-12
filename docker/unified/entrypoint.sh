@@ -12,6 +12,26 @@ export PORT
 # Render the nginx config with $PORT substituted in.
 envsubst '${PORT}' < /etc/nginx/nginx.conf.tmpl > /etc/nginx/nginx.conf
 
+# Derive EA's individual DB vars from DATABASE_URL when they aren't already
+# set. Format: postgresql://user:password@host:port/dbname
+if [ -n "${DATABASE_URL:-}" ]; then
+  _url="${DATABASE_URL}"
+  # Strip scheme
+  _url="${_url#postgresql://}"
+  _url="${_url#postgres://}"
+  # user:password@rest
+  _userpass="${_url%%@*}"
+  _hostpath="${_url#*@}"
+  export DB_USERNAME="${DB_USERNAME:-${_userpass%%:*}}"
+  export DB_PASSWORD="${DB_PASSWORD:-${_userpass#*:}}"
+  # host:port/dbname
+  _hostport="${_hostpath%%/*}"
+  export DB_HOST="${DB_HOST:-${_hostport%%:*}}"
+  export DB_PORT="${DB_PORT:-${_hostport##*:}}"
+  export DB_NAME="${DB_NAME:-${_hostpath#*/}}"
+  export DB_DRIVER="${DB_DRIVER:-postgre}"
+fi
+
 # Ensure EA writable dirs exist and are owned by the php-fpm user. EA's
 # Sessions / cache / uploads paths land in storage/ — without this the
 # CodeIgniter session handler 500s on first hit.
@@ -28,5 +48,11 @@ if [ -f "$PHP_POOL" ]; then
   sed -i 's|^;listen.group = .*|listen.group = www-data|' "$PHP_POOL"
 fi
 mkdir -p /run/php && chown www-data:www-data /run/php
+
+# Set EA's BASE_URL from Railway's public hostname if not provided.
+# RAILWAY_PUBLIC_DOMAIN is injected automatically by Railway.
+if [ -z "${BASE_URL:-}" ] && [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
+  export BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}"
+fi
 
 exec "$@"
