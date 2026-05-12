@@ -72,8 +72,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # nginx, php-fpm, python runtime, node, supervisor, gettext (for envsubst
 # at startup so the nginx.conf can templatize service ports). Debian
-# bookworm ships Node 18, but @supabase/realtime-js requires global
-# WebSocket (Node 20+); install Node 20 from NodeSource instead.
+# bookworm ships Node 18, but @supabase/realtime-js needs the native
+# WebSocket global which only landed in Node 22.4; install Node 22 from
+# NodeSource instead.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates curl gnupg gettext-base supervisor \
         nginx \
@@ -83,7 +84,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && mkdir -p /etc/apt/keyrings \
  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
         | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
- && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" \
+ && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
         > /etc/apt/sources.list.d/nodesource.list \
  && apt-get update && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/* \
