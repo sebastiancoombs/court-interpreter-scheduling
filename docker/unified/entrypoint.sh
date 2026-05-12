@@ -53,7 +53,7 @@ if [ -f "$PHP_POOL" ]; then
   {
     echo ""
     echo "; EA env passthrough appended by entrypoint.sh"
-    for v in BASE_URL DB_DRIVER DB_HOST DB_PORT DB_NAME DB_USERNAME DB_PASSWORD LANGUAGE DEBUG_MODE JWT_SECRET_KEY; do
+    for v in BASE_URL DB_DRIVER DB_HOST DB_PORT DB_NAME DB_USERNAME DB_PASSWORD LANGUAGE DEBUG_MODE JWT_SECRET_KEY APP_ENV; do
       val=$(printenv "$v" || true)
       [ -n "$val" ] && printf 'env[%s] = "%s"\n' "$v" "$val"
     done
